@@ -1,0 +1,9 @@
+﻿prepare/binutils-2.41
+prepare/build-binutils
+prepare/build-gcc/build-x86_64-pc-linux-gnu
+prepare/build-gcc
+prepare/gcc-13.2.0
+prepare/binutils-2.41.tar.gz
+prepare/gcc-13.2.0.tar.gz
+prepare/opt
+serial.log
