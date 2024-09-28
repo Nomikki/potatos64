@@ -1,45 +1,74 @@
 # Makefile
 
-PREFIX=i686-elf
+PREFIX=x86_64-elf
 CC=$(PREFIX)-gcc
 LD=$(PREFIX)-ld
-CFLAGS=-ffreestanding -m32 -g
-LDFLAGS=-nostdlib -no-pie -Ttext 0x100000
+ASM=nasm
 
+#CFLAGS=-ffreestanding -m64 -g
+CFLAGS=-std=gnu99 \
+		-nostdlib \
+		-fno-builtin \
+		-fno-exceptions \
+		-fno-leading-underscore \
+		-Wno-write-strings \
+		-fno-pic \
+		-ffreestanding \
+        -ffreestanding \
+        -Wall \
+        -Wextra \
+        -Iinclude \
+        -mno-red-zone \
+        -mno-sse \
+        -mcmodel=large
+
+LDFLAGS=-melf_x86_64
+ASMFLAGS=-f elf64
 QEMU_SYSTEM := qemu-system-x86_64.exe
 
-ASM=nasm
-ASMFLAGS=-f elf
+
+
 
 BUILDDIR=build
+OBJECTDIR=obj
 ISODIR=$(BUILDDIR)/iso
 ISO_FILENAME = $(BUILDDIR)/potatos.iso
 
+OBJECTS = obj/boot/boot.o \
+					obj/kernel/kernel.o
+					
+					
+				
+
 all: clean iso run
 
-$(BUILDDIR)/boot.o: boot/boot.asm
-	@mkdir -p $(BUILDDIR)
-	$(ASM) $(ASMFLAGS) -o $@ $<
-
-$(BUILDDIR)/gdt.o: kernel/gdt.asm
-	@mkdir -p $(BUILDDIR)
-	$(ASM) $(ASMFLAGS) -o $@ $<
+obj/%.o: src/%.asm
+		@mkdir -p $(@D)
+  	#echo $(ASM) $(ASMFLAGS) $< -o $@
+		nasm $(ASMFLAGS) $< -o $@
 
 
-$(BUILDDIR)/kernel.o: kernel/kernel.c
-	$(CC) $(CFLAGS) -c $< -o $@
+obj/%.o: src/%.c
+		@mkdir -p $(@D)
+		x86_64-elf-gcc $(CFLAGS) -o $@ -c $< 
 
-$(BUILDDIR)/kernel.elf: $(BUILDDIR)/boot.o $(BUILDDIR)/gdt.o  $(BUILDDIR)/kernel.o
-	$(LD) $(LDFLAGS) -o $@ $^
+
+$(BUILDDIR)/kernel.elf: linker.ld $(OBJECTS)
+# $(LD) $(LDFLAGS) -o $@ $^
+	@mkdir -p $(ISODIR)/boot/grub
+	$(LD) -n -o $(LDFLAGS) -T $< -o $@ $(OBJECTS)
+
+
 
 iso: $(BUILDDIR)/kernel.elf
-	@mkdir -p $(ISODIR)/boot/grub
+	@mkdir -p $(BUILDDIR)
 	cp $(BUILDDIR)/kernel.elf $(ISODIR)/boot/
 	cp grub/grub.cfg $(ISODIR)/boot/grub/
 	grub-mkrescue -o $(BUILDDIR)/potatos.iso $(ISODIR)
 
 clean:
 	rm -rf $(BUILDDIR)
+	rm -rf $(OBJECTDIR)
 
 run:
 # qemu-system-x86_64.exe -cdrom $(ISO_FILENAME) -serial file:"serial.log"

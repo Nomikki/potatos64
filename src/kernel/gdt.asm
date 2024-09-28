@@ -16,22 +16,22 @@ global test_pmode
 
 
 load_gdt:
-  lgdt[gdt_descriptor]       ; Load GDT
-  mov ax, 0x10               ; Load data segment (offset 0x10 gdt)
-  mov ds, ax
-  mov es, ax
-  mov fs, ax
-  mov gs, ax
-  mov ss, ax
-  jmp 0x08:.flush_code       ; Load code segment (offset 0x08 gdt)
-
-
-.flush_code:
+;  lgdt[gdt_descriptor]       ; Load GDT
+;  mov ax, 0x10               ; Load data segment (offset 0x10 gdt)
+;  mov ds, ax
+;  mov es, ax
+;  mov fs, ax
+;  mov gs, ax
+;  mov ss, ax
+;  jmp 0x08:.flush_code       ; Load code segment (offset 0x08 gdt)
+;
+;
+;.flush_code:
   ret
 
 
 test_pmode:
-    mov eax, cr0      
+    mov rax, cr0      
     test eax, 1       
     jz .not_protected  ; 
     

@@ -3,7 +3,7 @@
 sudo apt install build-essential bison flex libgmp3-dev libmpc-dev libmpfr-dev texinfo wget grub-common grub-pc-bin xorriso
 #variables to help
 export PREFIX="`pwd`/opt/cross"
-export TARGET=i686-elf
+export TARGET=x86_64-elf
 export PATH="$PREFIX/bin:$PATH"
 #which versions to install?
 export BINUTILS=binutils-2.41
@@ -31,7 +31,7 @@ cd ..
 which -- $TARGET-as ||echo $TARGET-as is not in the PATH
 mkdir build-gcc
 cd build-gcc
-../$GCCV/configure --target=$TARGET --prefix=$PREFIX --disable-nls --enable-languages=c,c++ --without-headers
+../$GCCV/configure --target=$TARGET --prefix=$PREFIX --disable-nls --enable-languages=c --without-headers
 make all-gcc
 make all-target-libgcc
 make install-gcc
