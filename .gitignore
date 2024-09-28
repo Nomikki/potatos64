@@ -7,3 +7,7 @@ prepare/binutils-2.41.tar.gz
 prepare/gcc-13.2.0.tar.gz
 prepare/opt
 serial.log
+.vscode
+*.o
+*.elf
+*.iso
