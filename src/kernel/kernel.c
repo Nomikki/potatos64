@@ -3,6 +3,7 @@
 #include <drivers/serial.h>
 #include <drivers/vga.h>
 #include <stdio.h>
+#include <string.h>
 
 int kernel_main(uint32_t addr, uint32_t magic)
 {

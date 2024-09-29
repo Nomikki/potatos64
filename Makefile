@@ -41,6 +41,7 @@ OBJECTS = obj/boot/boot.o \
 					obj/drivers/vga.o \
 					obj/kernel/kernel.o \
 					obj/lib/stdio.o \
+					obj/lib/string.o \
 					
 					
 					
