@@ -6,21 +6,22 @@ LD=$(PREFIX)-ld
 ASM=nasm
 
 #CFLAGS=-ffreestanding -m64 -g
-CFLAGS=-std=gnu99 \
-		-nostdlib \
-		-fno-builtin \
-		-fno-exceptions \
-		-fno-leading-underscore \
-		-Wno-write-strings \
-		-fno-pic \
-		-ffreestanding \
+CFLAGS= -std=gnu99 \
+				-nostdlib \
+				-fno-builtin \
+				-fno-exceptions \
+				-fno-leading-underscore \
+				-Wno-write-strings \
+				-fno-pic \
+				-ffreestanding \
         -ffreestanding \
         -Wall \
         -Wextra \
         -Iinclude \
         -mno-red-zone \
         -mno-sse \
-        -mcmodel=large
+        -mcmodel=large \
+				-Iinclude
 
 LDFLAGS=-melf_x86_64
 ASMFLAGS=-f elf64
@@ -44,7 +45,6 @@ all: clean iso run
 
 obj/%.o: src/%.asm
 		@mkdir -p $(@D)
-  	#echo $(ASM) $(ASMFLAGS) $< -o $@
 		nasm $(ASMFLAGS) $< -o $@
 
 
@@ -54,10 +54,8 @@ obj/%.o: src/%.c
 
 
 $(BUILDDIR)/kernel.elf: linker.ld $(OBJECTS)
-# $(LD) $(LDFLAGS) -o $@ $^
 	@mkdir -p $(ISODIR)/boot/grub
 	$(LD) -n -o $(LDFLAGS) -T $< -o $@ $(OBJECTS)
-
 
 
 iso: $(BUILDDIR)/kernel.elf

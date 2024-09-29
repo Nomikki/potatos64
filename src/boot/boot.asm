@@ -1,4 +1,3 @@
-;%include "src/boot/multiboot_structs.inc"
 %define MULTIBOOT_TAG_TYPE_END  0
 %define MULTIBOOT_TAG_TYPE_BASIC_MEMINFO 4
 %define MULTIBOOT_TAG_TYPE_MMAP 6
