@@ -53,11 +53,8 @@ int kernel_main(uint32_t addr, uint32_t magic) {
 	buffer[3] =  (struct Char){(uint8_t)'!', terminal_color};
 
 	serial_init();
-	serial_writeline("Ruaah!");
+	serial_writeline("Hi, Mark!");
 	serial_writeline("Kokeillaan uudestaan!");
 
-	while(1) {};
-
 	return 0;
-	
 }

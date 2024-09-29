@@ -11,13 +11,6 @@ int serial_init()
   outportb(PORT_COM1 + 2, 0xC7);    // Enable FIFO, clear them, with 14-byte threshold
   outportb(PORT_COM1 + 4, 0x0B);    // IRQs enabled, RTS/DSR set
 
-  if (inportb(PORT_COM1 + 0) != 0xAE)
-  {
-    return 1;
-  }
-
-  outportb(PORT_COM1 + 4, 0x0F);
-
   return 0;
 }
 
