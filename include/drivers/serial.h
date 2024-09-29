@@ -7,6 +7,6 @@
 
 extern int serial_init();
 extern void serial_write(char ch);
-extern void serial_writeline(char * str);
+extern void serial_writeline(char *str);
 
 #endif
