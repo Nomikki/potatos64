@@ -42,6 +42,8 @@ OBJECTS = obj/boot/boot.o \
 					obj/kernel/kernel.o \
 					obj/lib/stdio.o \
 					obj/lib/string.o \
+					obj/arch/x86_64/idt/idt.o \
+					obj/arch/x86_64/idt/idt_stub.o \
 					
 					
 					
