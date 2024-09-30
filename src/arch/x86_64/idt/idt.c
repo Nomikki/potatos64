@@ -13,8 +13,8 @@ void idt_set_entry(uint8_t vector, void *handler, uint8_t dpl)
   entry->address_mid = (handler_addr >> 16) & 0xFFFF;
   entry->address_high = handler_addr >> 32;
 
-  entry->selector = 0x08;
-  entry->flags = 0b1110 | ((dpl & 0b11) << 5) | (1 << 7);
+  entry->selector = CODE_SELECTOR;
+  entry->flags = PRESENT_BIT | DPL(dpl) | INTERRUPT_GATE;
 
   entry->ist = 0;
 }
@@ -70,20 +70,20 @@ void idt_init()
   idt_set_entry(0x22, interrupt_service_routine_34, 0);
 
   // remap
-  outportb(PIC_MASTER_COMMAND, 0x11);
-  outportb(PIC_SLAVE_COMMAND, 0x11);
+  outportb(PIC_MASTER_COMMAND, PIC_RESET);
+  outportb(PIC_SLAVE_COMMAND, PIC_RESET);
 
-  outportb(PIC_MASTER_DATA, 0x20);
-  outportb(PIC_SLAVE_DATA, 0x28);
+  outportb(PIC_MASTER_DATA, PIC_MASTER_REMAP_VECTOR);
+  outportb(PIC_SLAVE_DATA, PIC_SLAVE_REMAP_VECTOR);
 
-  outportb(PIC_MASTER_DATA, 0x04);
-  outportb(PIC_SLAVE_DATA, 0x02);
+  outportb(PIC_MASTER_DATA, PIC_SLAVE_IRQ_TO_MASTER);
+  outportb(PIC_SLAVE_DATA, PIC_MASTER_IRQ__TO_SLAVE);
 
-  outportb(PIC_MASTER_DATA, 0x1);
-  outportb(PIC_SLAVE_DATA, 0x01);
+  outportb(PIC_MASTER_DATA, PIC_8086_MODE);
+  outportb(PIC_SLAVE_DATA, PIC_8086_MODE);
 
-  outportb(PIC_MASTER_DATA, 0x00);
-  outportb(PIC_SLAVE_DATA, 0x00);
+  outportb(PIC_MASTER_DATA, PIC_USE_ALL_INTERRUPTS);
+  outportb(PIC_SLAVE_DATA, PIC_USE_ALL_INTERRUPTS);
 
   idt_load();
 
@@ -115,16 +115,35 @@ struct cpu_status *interrupt_dispatch(struct cpu_status *context)
   {
     puts("vector: ");
     print_int(context->vector_number);
+
+    switch (interrupt_number)
+    {
+
+    case 8:
+      puts("Double fault");
+      break;
+
+    case 13:
+      puts("General protection fault");
+      break;
+
+    case 14:
+      puts("Page fault");
+      break;
+
+    default:
+      break;
+    }
   }
 
   if (interrupt_number >= 0x20)
   {
 
-    outportb(PIC_MASTER_COMMAND, 0x20); // send EOI (end of interrupt)
+    outportb(PIC_MASTER_COMMAND, PIC_EOI); // send EOI (end of interrupt)
 
     if (0x20 + 8 <= interrupt_number)
     {
-      outportb(PIC_SLAVE_COMMAND, 0x20);
+      outportb(PIC_SLAVE_COMMAND, PIC_EOI);
     }
 
     if (interrupt_number == 0x21)

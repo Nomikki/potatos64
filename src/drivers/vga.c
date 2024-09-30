@@ -10,9 +10,9 @@ uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg)
   return fg | bg << 4;
 }
 
-uint16_t vga_entry(unsigned char uc, uint8_t color)
+uint16_t vga_entry(uint8_t ch, uint8_t color)
 {
-  return (uint16_t)uc | (uint16_t)color << 8;
+  return (uint16_t)ch | (uint16_t)color << 8;
 }
 
 void vga_set_color(uint8_t c)

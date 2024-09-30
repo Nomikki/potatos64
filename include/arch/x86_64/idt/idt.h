@@ -50,10 +50,38 @@ struct cpu_status
 
 #define IDT_SIZE 256
 
+#define CODE_SELECTOR 0x08
+#define INTERRUPT_GATE 0b1110
+#define PRESENT_BIT (1 << 7)
+#define DPL(dpl) (((dpl) & 0b11) << 5)
+
 #define PIC_MASTER_COMMAND 0x20
 #define PIC_MASTER_DATA 0x21
 #define PIC_SLAVE_COMMAND 0xA0
 #define PIC_SLAVE_DATA 0xA1
+
+/*
+  IRQ LINES:
+  0: Timer
+  1: Keyboard
+  2: slave pic
+  3: com2
+  4: com1
+  5: lpt2 or soundcard
+  6: floppy disk
+  7: lpt1
+*/
+
+#define PIC_RESET 0x11
+#define PIC_MASTER_REMAP_VECTOR 0x20
+#define PIC_SLAVE_REMAP_VECTOR 0x28
+#define PIC_SLAVE_IRQ_TO_MASTER 0x04
+#define PIC_MASTER_IRQ__TO_SLAVE 0x02
+#define PIC_8086_MODE 0x01
+#define PIC_USE_ALL_INTERRUPTS 0x00
+
+// end of interrupt
+#define PIC_EOI 0x20
 
 extern void idt_set_entry(uint8_t vector, void *handler, uint8_t dpl);
 extern void idt_load();
