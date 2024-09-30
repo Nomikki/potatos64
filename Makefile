@@ -40,6 +40,7 @@ OBJECTS = obj/boot/boot.o \
 					obj/drivers/serial.o \
 					obj/drivers/vga.o \
 					obj/kernel/kernel.o \
+					obj/lib/stdlib.o \
 					obj/lib/stdio.o \
 					obj/lib/string.o \
 					obj/arch/x86_64/idt/idt.o \
