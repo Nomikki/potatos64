@@ -36,6 +36,7 @@ ISODIR=$(BUILDDIR)/iso
 ISO_FILENAME = $(BUILDDIR)/potatos.iso
 
 OBJECTS = obj/boot/boot.o \
+					obj/drivers/keyboard.o \
 					obj/drivers/ports.o \
 					obj/drivers/serial.o \
 					obj/drivers/vga.o \

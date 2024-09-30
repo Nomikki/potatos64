@@ -13,17 +13,14 @@ void test()
 int kernel_main(uint32_t addr, uint32_t magic)
 {
 	vga_clear_screen();
+	enable_cursor(14, 15);
 	serial_init();
 
 	idt_init();
 
-	puts("Ohai, world!");
-	printf("Moi! %p\n", &kernel_main);
-	printf("Moi! %p\n", addr);
-	for (int i = 0; i < 1024; i++)
-	{
-		printf("i: %x \n", i);
-	}
+	printf("%x\n", addr);
+	printf("%x\n", addr);
+	printf("%b\n", addr);
 
 	while (1)
 		__asm__("hlt");

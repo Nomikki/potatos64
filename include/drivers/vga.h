@@ -37,4 +37,6 @@ extern uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg);
 extern void vga_scroll_screen();
 extern void vga_next_line();
 
+extern void enable_cursor(uint8_t start, uint8_t end);
+
 #endif

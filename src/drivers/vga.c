@@ -54,10 +54,23 @@ void vga_write_char(int ch, int x, int y)
   if (ch == '\n')
   {
     vga_next_line();
+    vga_update_cursor();
+    return;
+  }
+
+  if (ch == 14)
+  {
+    if (cursorX > 0)
+      cursorX--;
+    int i = y * VGA_WIDTH + cursorX;
+
+    vga_buffer[i] = vga_entry(' ', vga_color);
+    vga_update_cursor();
     return;
   }
 
   int i = y * VGA_WIDTH + x;
+
   if (i < VGA_WIDTH * VGA_HEIGHT)
   {
     vga_buffer[i] = vga_entry(ch, vga_color);
@@ -68,12 +81,40 @@ void vga_write_char(int ch, int x, int y)
   {
     vga_next_line();
   }
+  vga_update_cursor();
+}
+
+void set_cursor_position(uint16_t position)
+{
+  outportb(0x3D4, 0x0F);                       // Lähetetään kursoriin liittyvä alhaisempi tavu
+  outportb(0x3D5, (uint8_t)(position & 0xFF)); // Alempi tavu sijainnista
+
+  outportb(0x3D4, 0x0E);                              // Lähetetään kursoriin liittyvä korkeampi tavu
+  outportb(0x3D5, (uint8_t)((position >> 8) & 0xFF)); // Korkeampi tavu sijainnista
+}
+
+void enable_cursor(uint8_t start, uint8_t end)
+{
+  outportb(0x3D4, 0x0A);
+  outportb(0x3D5, (inportb(0x3D5) & 0xC0) | start);
+
+  outportb(0x3D4, 0x0B);
+  outportb(0x3D5, (inportb(0x3D5) & 0xE0) | end);
+
+  vga_update_cursor();
+}
+
+void vga_update_cursor()
+{
+  uint16_t i = cursorY * VGA_WIDTH + cursorX;
+  set_cursor_position(i);
 }
 
 void vga_set_cursor_pos(int x, int y)
 {
   cursorX = x;
   cursorY = y;
+  vga_update_cursor();
 }
 
 void vga_get_cursor_pos(int *x, int *y)

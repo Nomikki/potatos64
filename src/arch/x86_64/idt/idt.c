@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <drivers/keyboard.h>
+
 struct interrupt_descriptor idt[IDT_SIZE];
 
 void idt_set_entry(uint8_t vector, void *handler, uint8_t dpl)
@@ -65,8 +67,8 @@ void idt_init()
   idt_set_entry(0x11, interrupt_service_routine_err_17, 0);
   idt_set_entry(0x12, interrupt_service_routine_18, 0);
 
-  idt_set_entry(0x20, interrupt_service_routine_32, 0);
-  idt_set_entry(0x21, interrupt_service_routine_33, 0);
+  idt_set_entry(0x20, interrupt_service_routine_32, 0); // timer
+  idt_set_entry(0x21, interrupt_service_routine_33, 0); // keyboard
   idt_set_entry(0x22, interrupt_service_routine_34, 0);
 
   // remap
@@ -86,24 +88,7 @@ void idt_init()
   outportb(PIC_SLAVE_DATA, PIC_USE_ALL_INTERRUPTS);
 
   idt_load();
-
   __asm__ volatile("sti");
-}
-
-void print_int(int num)
-{
-  int a = num;
-
-  if (num < 0)
-  {
-    putchar('-');
-    num = -num;
-  }
-
-  if (num > 9)
-    print_int(num / 10);
-
-  putchar('0' + (a % 10));
 }
 
 struct cpu_status *interrupt_dispatch(struct cpu_status *context)
@@ -113,12 +98,10 @@ struct cpu_status *interrupt_dispatch(struct cpu_status *context)
 
   if (interrupt_number >= 0 && interrupt_number < 0x20)
   {
-    puts("vector: ");
-    print_int(context->vector_number);
+    printf("vector: %x (%i)\n", context->vector_number, context->vector_number);
 
     switch (interrupt_number)
     {
-
     case 8:
       puts("Double fault");
       break;
@@ -132,6 +115,7 @@ struct cpu_status *interrupt_dispatch(struct cpu_status *context)
       break;
 
     default:
+      printf("Unhandled interrupt: %i (%x)!\n", interrupt_number, interrupt_number);
       break;
     }
   }
@@ -143,13 +127,13 @@ struct cpu_status *interrupt_dispatch(struct cpu_status *context)
 
     if (0x20 + 8 <= interrupt_number)
     {
+
       outportb(PIC_SLAVE_COMMAND, PIC_EOI);
     }
 
     if (interrupt_number == 0x21)
     {
-      uint8_t scancode = inportb(0x60);
-      // kprintf("%c", scancode);
+      keyboard_driver_irq_handler();
     }
   }
 
