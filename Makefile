@@ -27,13 +27,11 @@ LDFLAGS=-melf_x86_64
 ASMFLAGS=-f elf64
 QEMU_SYSTEM := qemu-system-x86_64.exe
 
-
-
-
 BUILDDIR=build
 OBJECTDIR=obj
 ISODIR=$(BUILDDIR)/iso
 ISO_FILENAME = $(BUILDDIR)/potatos.iso
+FONTNAME = font.psf
 
 OBJECTS = obj/boot/boot.o \
 					obj/drivers/framebuffer/framebuffer.o \
@@ -48,7 +46,7 @@ OBJECTS = obj/boot/boot.o \
 					obj/arch/x86_64/idt/idt.o \
 					obj/arch/x86_64/idt/idt_stub.o \
 
-all: clean iso run
+all: clean iso createFont run
 
 obj/%.o: src/%.asm
 		@mkdir -p $(@D)
@@ -62,19 +60,26 @@ obj/%.o: src/%.c
 
 $(BUILDDIR)/kernel.elf: linker.ld $(OBJECTS)
 	@mkdir -p $(ISODIR)/boot/grub
-	$(LD) -n -o $(LDFLAGS) -T $< -o $@ $(OBJECTS)
-
-
-iso: $(BUILDDIR)/kernel.elf
-	@mkdir -p $(BUILDDIR)
-	cp $(BUILDDIR)/kernel.elf $(ISODIR)/boot/
-	cp grub/grub.cfg $(ISODIR)/boot/grub/
-	grub-mkrescue -o $(BUILDDIR)/potatos.iso $(ISODIR)
+	$(LD) -n -o $(LDFLAGS) -T $< -o $@ $(OBJECTS) obj/font.o
 
 clean:
 	rm -rf $(BUILDDIR)
 	rm -rf $(OBJECTDIR)
 
+
+iso: createFont $(BUILDDIR)/kernel.elf
+	@mkdir -p $(BUILDDIR)
+	cp $(BUILDDIR)/kernel.elf $(ISODIR)/boot/
+	cp grub/grub.cfg $(ISODIR)/boot/grub/
+	grub-mkrescue -o $(BUILDDIR)/potatos.iso $(ISODIR)
+
+
+createFont:
+	mkdir -p obj
+	objcopy -O elf64-x86-64 -B i386 -I binary $(FONTNAME) obj/font.o
+	readelf -s obj/font.o
+
 run:
 # qemu-system-x86_64.exe -cdrom $(ISO_FILENAME) -serial file:"serial.log"
+	
 	$(QEMU_SYSTEM) -monitor unix:qemu-monitor-socket,server,nowait -cpu qemu64,+x2apic  -cdrom $(ISO_FILENAME) -serial file:"serial.log" -m 256M -no-reboot -no-shutdown

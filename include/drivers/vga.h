@@ -3,10 +3,8 @@
 
 #include <types.h>
 
-#define VGA_VIDEO_MEM_START 0xFFFFFFFF800b8000
-#define VGA_WIDTH 80
-#define VGA_HEIGHT 25
-
+// #define VGA_VIDEO_MEM_START 0xFFFFFFFF800b8000
+#define VGA_VIDEO_MEM_START (0xffffffffbd1D8000)
 enum vga_color
 {
   VGA_COLOR_BLACK = 0,
@@ -38,5 +36,8 @@ extern void vga_scroll_screen();
 extern void vga_next_line();
 
 extern void enable_cursor(uint8_t start, uint8_t end);
+
+extern void vga_resize(int new_width, int new_height);
+extern uint16_t *vga_get_buffer();
 
 #endif

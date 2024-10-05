@@ -20,19 +20,64 @@ void init_memory()
 	tagmem = (struct multiboot_tag_basic_meminfo *)(multiboot_basic_meminfo + _HIGHER_HALF_KERNEL_MEM_START);
 	uint64_t all_memory = tagmem->mem_lower + tagmem->mem_upper;
 
-	printfs("Memory available: : (%i MB), (%i KB)\n", all_memory / 1024, all_memory);
+	printf("Memory available: : (%i MB), (%i KB)\n", all_memory / 1024, all_memory);
 }
 
 void init_video()
 {
 	tagfb = (struct multiboot_tag_framebuffer *)(multiboot_framebuffer_data + _HIGHER_HALF_KERNEL_MEM_START);
+	vga_resize(100, 37);
+	printf("framebuffer addr: %p\n", (tagfb->common.framebuffer_addr + _HIGHER_HALF_KERNEL_MEM_START));
+	printf("framebuffer width: %i\n", tagfb->common.framebuffer_width);
+	printf("framebuffer height: %i\n", tagfb->common.framebuffer_height);
+	printf("framebuffer bpp: %i\n", tagfb->common.framebuffer_bpp);
+	printf("framebuffer pitch: %i\n", tagfb->common.framebuffer_pitch);
+	printf("framebuffer type: %i\n", tagfb->common.framebuffer_type);
+	printf("\n");
+	framebuffer_init();
+}
 
-	printfs("framebuffer addr: %p\n", (tagfb->common.framebuffer_addr + _HIGHER_HALF_KERNEL_MEM_START));
-	printfs("framebuffer width: %i\n", tagfb->common.framebuffer_width);
-	printfs("framebuffer height: %i\n", tagfb->common.framebuffer_height);
-	printfs("framebuffer bpp: %i\n", tagfb->common.framebuffer_bpp);
-	printfs("framebuffer pitch: %i\n", tagfb->common.framebuffer_pitch);
-	printfs("framebuffer type: %i\n", tagfb->common.framebuffer_type);
+void hexdump(const void *start, const void *end)
+{
+	const uint8_t *ptr = (const uint8_t *)start;
+	const uint8_t *end_ptr = (const uint8_t *)end;
+
+	while (ptr < end_ptr)
+	{
+		printf("%p: ", ptr);
+
+		for (int i = 0; i < 16; i++)
+		{
+			if (ptr + i < end_ptr)
+			{
+				if (ptr[i] >= 10)
+					printf("%x ", ptr[i]);
+				else
+					printf("0%x ", ptr[i]);
+			}
+			else
+			{
+				printf("   ");
+			}
+		}
+
+		printf(" | ");
+		for (int i = 0; i < 16; i++)
+		{
+			if (ptr + i < end_ptr)
+			{
+				char ch = ptr[i];
+				printf("%c", (ch >= 32 && ch < 127) ? ch : '.');
+			}
+			else
+			{
+				printf(" ");
+			}
+		}
+
+		printf("\n");
+		ptr += 16;
+	}
 }
 
 int kernel_main(uint32_t addr, uint32_t magic)
@@ -44,16 +89,14 @@ int kernel_main(uint32_t addr, uint32_t magic)
 	init_memory();
 	init_video();
 
-	int k = 0;
+	hexdump(vga_get_buffer(), (vga_get_buffer() + 200));
+
 	while (1)
 	{
 		framebuffer_clear(26, 27, 38);
-		k++;
-		k = k % 255;
+		draw_text(0, 0, "PotatOS", 255, 255, 255);
 
-		for (int k = 0; k < 32; k++)
-			plot_pixel(32 + k, 32, 255, 255, 255);
-
+		videobuffer_draw_vga_buffer(vga_get_buffer(), 100, 37);
 		framebuffer_flip();
 	}
 

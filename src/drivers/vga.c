@@ -1,9 +1,14 @@
 #include <drivers/vga.h>
 
-static uint16_t *vga_buffer = (uint16_t *)VGA_VIDEO_MEM_START;
-static uint8_t cursorX = 0;
-static uint8_t cursorY = 0;
+uint16_t *vga_buffer = (uint16_t *)VGA_VIDEO_MEM_START;
+int16_t cursorX = 0;
+int16_t cursorY = 0;
 static uint8_t vga_color = 0;
+
+int VGA_WIDTH = 80;
+int VGA_HEIGHT = 25;
+
+bool redirect_to_videomemory = false;
 
 uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg)
 {
@@ -27,7 +32,7 @@ void vga_clear_screen()
 
   for (int i = 0; i < max_rows; i++)
   {
-    vga_buffer[i] = vga_entry(' ', vga_color);
+    vga_buffer[i] = vga_entry(0, vga_color);
   }
 
   vga_set_cursor_pos(0, 0);
@@ -135,4 +140,15 @@ void vga_scroll_screen()
   {
     vga_buffer[max_row_minus_one + i] = 0;
   }
+}
+
+void vga_resize(int new_width, int new_height)
+{
+  VGA_WIDTH = new_width;
+  VGA_HEIGHT = new_height;
+}
+
+uint16_t *vga_get_buffer()
+{
+  return vga_buffer;
 }
