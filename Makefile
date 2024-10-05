@@ -36,6 +36,7 @@ ISODIR=$(BUILDDIR)/iso
 ISO_FILENAME = $(BUILDDIR)/potatos.iso
 
 OBJECTS = obj/boot/boot.o \
+					obj/drivers/framebuffer/framebuffer.o \
 					obj/drivers/keyboard.o \
 					obj/drivers/ports.o \
 					obj/drivers/serial.o \
@@ -46,11 +47,6 @@ OBJECTS = obj/boot/boot.o \
 					obj/lib/string.o \
 					obj/arch/x86_64/idt/idt.o \
 					obj/arch/x86_64/idt/idt_stub.o \
-					
-					
-					
-					
-				
 
 all: clean iso run
 
@@ -81,4 +77,4 @@ clean:
 
 run:
 # qemu-system-x86_64.exe -cdrom $(ISO_FILENAME) -serial file:"serial.log"
-	$(QEMU_SYSTEM) -monitor unix:qemu-monitor-socket,server,nowait -cpu qemu64,+x2apic  -cdrom $(ISO_FILENAME) -serial file:"serial.log" -m 1G -no-reboot -no-shutdown
+	$(QEMU_SYSTEM) -monitor unix:qemu-monitor-socket,server,nowait -cpu qemu64,+x2apic  -cdrom $(ISO_FILENAME) -serial file:"serial.log" -m 256M -no-reboot -no-shutdown
