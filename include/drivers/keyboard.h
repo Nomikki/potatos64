@@ -1,5 +1,5 @@
-#ifndef __drivers_keyboard__
-#define __drivers_keyboard__
+#ifndef __drivers__keyboard__
+#define __drivers__keyboard__
 
 #include <types.h>
 
