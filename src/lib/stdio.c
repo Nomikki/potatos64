@@ -75,6 +75,20 @@ void printf(const char *format, ...)
         putstr(buffer);
         break;
       }
+      case 'B':
+      {
+        int value = va_arg(args, int);
+        char buffer[65];
+        itoa(value, buffer, 2);
+        int len_of_value = strlen(buffer);
+        for (int l = 0; l < 64 - len_of_value; l++)
+        {
+          putchar('0');
+        }
+
+        putstr(buffer);
+        break;
+      }
       case 'p':
       {
         void *ptr = va_arg(args, void *);
