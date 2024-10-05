@@ -1,7 +1,9 @@
 #ifndef __drivers__serial__
 #define __drivers__serial__
 
+#include <stdarg.h>
 #include <types.h>
+#include <stdlib.h>
 
 #define PORT_COM1 0x3f8
 
@@ -36,5 +38,7 @@
 extern int serial_init();
 extern void serial_write(char ch);
 extern void serial_writeline(char *str);
+extern void serial_write_str(char *str);
+extern void printfs(const char *format, ...);
 
 #endif
