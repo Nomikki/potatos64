@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include <drivers/keyboard.h>
+#include <drivers/framebuffer/framebuffer.h>
 
 struct interrupt_descriptor idt[IDT_SIZE];
 
@@ -105,33 +106,72 @@ struct cpu_status *interrupt_dispatch(struct cpu_status *context)
 
   if (interrupt_number >= 0 && interrupt_number < 0x20)
   {
-    printf("vector: %x (%i)\n", context->vector_number, context->vector_number);
+    // printf("vector: %x (%i)\n", context->vector_number, context->vector_number);
 
     switch (interrupt_number)
     {
     case 8:
-      puts("Double fault");
+      printf("\nDouble fault!\n");
       break;
 
     case 13:
-      puts("General protection fault");
+      printf("\nGeneral protection fault!\n");
       break;
 
     case 14:
-      puts("Page fault");
+      printf("\nPage fault!\n");
 
       uint64_t faulting_address = read_cr2();
-      printf("error code (memory access that triggered the page fault): %x\n", context->error_code);
-      printf("Page fault at address: %p\n", faulting_address);
+      // printf("error code (memory access that triggered the page fault): %x\n", context->error_code);
+      printf("Error code: %b\n", context->error_code);
+      printf("0:%b = Present\n", context->error_code & 0b1 ? 1 : 0);
+      printf("1:%b = Write\n", context->error_code & 0b10 ? 1 : 0);
+      printf("2:%b = User\n", context->error_code & 0b100 ? 1 : 0);
+      printf("3:%b = Reserved bit set\n", context->error_code & 0b1000 ? 1 : 0);
+      printf("4:%b = Instruction fetch\n\n", context->error_code & 0b10000 ? 1 : 0);
 
-      while (1)
-      {
-      }
+      printf("Page fault at address: %p\n\n", faulting_address);
+
+      printf("rax: %p   ", context->rax);
+      printf("rbx: %p\n", context->rbx);
+      printf("rcx: %p   ", context->rcx);
+      printf("rdx: %p\n\n", context->rdx);
+
+      printf("rdi: %p\n", context->rdi);
+      printf("rsi: %p   ", context->rsi);
+      printf("rbp: %p\n\n", context->rbp);
+
+      printf("r8:  %p   ", context->r8);
+      printf("r9:  %p\n", context->r9);
+      printf("r10: %p   ", context->r10);
+      printf("r11: %p\n", context->r11);
+      printf("r12: %p   ", context->r12);
+      printf("r13: %p\n", context->r13);
+      printf("r14: %p   ", context->r14);
+      printf("r15: %p\n\n", context->r15);
+
+      printf("iret cs:     %p   ", context->iret_cs);
+      printf("iret rip:    %p\n", context->iret_rip);
+      printf("iret rps:    %p   ", context->iret_rsp);
+      printf("iret ss:     %p\n\n", context->iret_ss);
+      printf("iret rflags: %p\n", context->iret_rflags);
+      printf("             %B\n", context->iret_rflags);
+      printf("           64|             48|             32|             16|              0\n");
+      printf("             FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210\n");
+
       break;
 
     default:
       printf("Unhandled interrupt: %i (%x)!\n", interrupt_number, interrupt_number);
       break;
+    }
+
+    while (1)
+    {
+      framebuffer_clear(128, 27, 26);
+      videobuffer_draw_vga_buffer(vga_get_buffer(), 100, 37);
+      framebuffer_flip();
+      __asm__("hlt");
     }
   }
 

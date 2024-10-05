@@ -37,6 +37,12 @@ void init_video()
 	framebuffer_init();
 }
 
+void testMemoryArea(void *address, uint32_t value)
+{
+	uint64_t *ptr = (uint64_t *)address;
+	ptr = value;
+}
+
 void hexdump(const void *start, const void *end)
 {
 	const uint8_t *ptr = (const uint8_t *)start;
@@ -91,13 +97,21 @@ int kernel_main(uint32_t addr, uint32_t magic)
 
 	hexdump(vga_get_buffer(), (vga_get_buffer() + 200));
 
+	// uint64_t *addrr = 0xffffffffbd1D8000;
+
 	while (1)
 	{
+
 		framebuffer_clear(26, 27, 38);
 		draw_text(0, 0, "PotatOS", 255, 255, 255);
 
 		videobuffer_draw_vga_buffer(vga_get_buffer(), 100, 37);
 		framebuffer_flip();
+
+		/*
+		addrr -= 0x1000;
+		*addrr = 0x1337;
+		*/
 	}
 
 	while (1)
