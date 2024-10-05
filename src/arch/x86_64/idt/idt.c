@@ -91,6 +91,13 @@ void idt_init()
   __asm__ volatile("sti");
 }
 
+uint64_t read_cr2()
+{
+  uint64_t cr2;
+  asm volatile("mov %%cr2, %0" : "=r"(cr2));
+  return cr2;
+}
+
 struct cpu_status *interrupt_dispatch(struct cpu_status *context)
 {
 
@@ -112,6 +119,14 @@ struct cpu_status *interrupt_dispatch(struct cpu_status *context)
 
     case 14:
       puts("Page fault");
+
+      uint64_t faulting_address = read_cr2();
+      printf("error code (memory access that triggered the page fault): %x\n", context->error_code);
+      printf("Page fault at address: %p\n", faulting_address);
+
+      while (1)
+      {
+      }
       break;
 
     default:
