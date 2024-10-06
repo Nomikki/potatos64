@@ -50,12 +50,18 @@ void printf(const char *format, ...)
       i++;
       switch (format[i])
       {
+      case 'u':
+        uint32_t value = va_arg(args, uint32_t);
+        char buffer[32];
+        itoa64(value, buffer, 10);
+        putstr(buffer);
+        break;
       case 'i':
       case 'd':
       {
         int value = va_arg(args, int);
         char buffer[32];
-        itoa(value, buffer, 10);
+        itoa64(value, buffer, 10);
         putstr(buffer);
         break;
       }
@@ -63,7 +69,7 @@ void printf(const char *format, ...)
       {
         int value = va_arg(args, int);
         char buffer[32];
-        itoa(value, buffer, 16);
+        itoa64(value, buffer, 16);
         putstr(buffer);
         break;
       }
@@ -110,7 +116,7 @@ void printf(const char *format, ...)
       case 's':
       {
         char *str = va_arg(args, char *);
-        puts(str);
+        putstr(str);
         break;
       }
       case 'c':
