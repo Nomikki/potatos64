@@ -69,7 +69,7 @@ void videobuffer_draw_vga_buffer(uint16_t *vga_buf, int width, int height)
 
     char tempText[width + 1];
     for (int px = 0; px < width + 1; px++)
-      tempText[width] = 0;
+      tempText[px] = 0;
 
     for (int px = 0; px < width; px++)
     {
