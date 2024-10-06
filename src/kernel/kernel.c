@@ -6,33 +6,43 @@
 #include <string.h>
 #include <arch/x86_64/idt/idt.h>
 #include <drivers/framebuffer/framebuffer.h>
+#include <mem/pmm.h>
+#include <mem/mmap.h>
 
 #define _HIGHER_HALF_KERNEL_MEM_START 0xffffffff80000000
 
 extern uint64_t multiboot_framebuffer_data;
 extern uint64_t multiboot_basic_meminfo;
+extern uint64_t multiboot_mmap_data;
 
 struct multiboot_tag_basic_meminfo *tagmem = NULL;
 struct multiboot_tag_framebuffer *tagfb = NULL;
+struct multiboot_tag_mmap *tagmmap = NULL;
 
 void init_memory()
 {
 	tagmem = (struct multiboot_tag_basic_meminfo *)(multiboot_basic_meminfo + _HIGHER_HALF_KERNEL_MEM_START);
 	uint64_t all_memory = tagmem->mem_lower + tagmem->mem_upper;
 
+	tagmmap = (struct multiboot_tat_mmap *)(multiboot_mmap_data + _HIGHER_HALF_KERNEL_MEM_START);
+
 	printf("Memory available: : (%i MB), (%i KB)\n", all_memory / 1024, all_memory);
+
+	mmap_parse(tagmmap);
 }
 
 void init_video()
 {
 	tagfb = (struct multiboot_tag_framebuffer *)(multiboot_framebuffer_data + _HIGHER_HALF_KERNEL_MEM_START);
 	vga_resize(100, 37);
+	/*
 	printf("framebuffer addr: %p\n", (tagfb->common.framebuffer_addr + _HIGHER_HALF_KERNEL_MEM_START));
 	printf("framebuffer width: %i\n", tagfb->common.framebuffer_width);
 	printf("framebuffer height: %i\n", tagfb->common.framebuffer_height);
 	printf("framebuffer bpp: %i\n", tagfb->common.framebuffer_bpp);
 	printf("framebuffer pitch: %i\n", tagfb->common.framebuffer_pitch);
 	printf("framebuffer type: %i\n", tagfb->common.framebuffer_type);
+	*/
 	printf("\n");
 	framebuffer_init();
 }
@@ -92,26 +102,18 @@ int kernel_main(uint32_t addr, uint32_t magic)
 	enable_cursor(14, 15);
 	serial_init();
 	idt_init();
-	init_memory();
 	init_video();
+	init_memory();
 
-	hexdump(vga_get_buffer(), (vga_get_buffer() + 200));
-
-	// uint64_t *addrr = 0xffffffffbd1D8000;
+	// hexdump(vga_get_buffer(), (vga_get_buffer() + 200));
 
 	while (1)
 	{
-
 		framebuffer_clear(26, 27, 38);
 		draw_text(0, 0, "PotatOS", 255, 255, 255);
 
 		videobuffer_draw_vga_buffer(vga_get_buffer(), 100, 37);
 		framebuffer_flip();
-
-		/*
-		addrr -= 0x1000;
-		*addrr = 0x1337;
-		*/
 	}
 
 	while (1)

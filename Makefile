@@ -45,6 +45,8 @@ OBJECTS = obj/boot/boot.o \
 					obj/lib/string.o \
 					obj/arch/x86_64/idt/idt.o \
 					obj/arch/x86_64/idt/idt_stub.o \
+					obj/mem/mmap.o \
+					obj/mem/pmm.o \
 
 all: clean iso createFont run
 
