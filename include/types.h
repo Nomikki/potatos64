@@ -15,4 +15,6 @@ typedef uint8_t bool;
 #define true 1
 #define false 0
 
+typedef unsigned int size_t;
+
 #endif
