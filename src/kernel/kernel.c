@@ -19,16 +19,52 @@ struct multiboot_tag_basic_meminfo *tagmem = NULL;
 struct multiboot_tag_framebuffer *tagfb = NULL;
 struct multiboot_tag_mmap *tagmmap = NULL;
 
+uint64_t *bitmap_address = NULL;
+extern uint64_t _kernel_end;
+extern uint64_t _kernel_physical_end;
+int64_t all_memory = 0;
+
 void init_memory()
 {
 	tagmem = (struct multiboot_tag_basic_meminfo *)(multiboot_basic_meminfo + _HIGHER_HALF_KERNEL_MEM_START);
-	uint64_t all_memory = tagmem->mem_lower + tagmem->mem_upper;
+	all_memory = tagmem->mem_lower + tagmem->mem_upper;
 
 	tagmmap = (struct multiboot_tat_mmap *)(multiboot_mmap_data + _HIGHER_HALF_KERNEL_MEM_START);
 
-	printf("Memory available: : (%i MB), (%i KB)\n", all_memory / 1024, all_memory);
+	printf("Memory available: : (%u MB), (%u KB)\n", all_memory / 1024, all_memory);
 
 	mmap_parse(tagmmap);
+
+	// find area for bitmap and return its address. If not enough memory/error, return NULL.
+	bitmap_address = bitmap_init(all_memory / (4 * 16));
+
+	// then find all reserved areas and mark them to bitmap
+
+	// printf("Bitmap address: %p\n", bitmap_address);
+	// printf("Kernel physical end: %p\n", &_kernel_physical_end);
+}
+
+void draw_bitmap()
+{
+
+	uint32_t bitmap_size = all_memory / (4 * 16);
+	uint8_t c = 64;
+	uint64_t test_address = 0;
+	for (int i = 0; i < bitmap_size; i++)
+	{
+		for (int x = 0; x < 16; x++)
+		{
+
+			// if ((bitmap_address[i] >> x) & 1 == 1)
+			if (bitmap_test(test_address) != 0)
+				c = 255;
+			else
+				c = 0;
+
+			plot_pixel(800 - 48 + x, i + 16, c, c, c);
+			test_address += 0x1000;
+		}
+	}
 }
 
 void init_video()
@@ -105,7 +141,12 @@ int kernel_main(uint32_t addr, uint32_t magic)
 	init_video();
 	init_memory();
 
+	printf("location of main: %p\n", (void *)kernel_main - _HIGHER_HALF_KERNEL_MEM_START);
+
 	// hexdump(vga_get_buffer(), (vga_get_buffer() + 200));
+
+	for (int i = 0; i < 1000; i++)
+		bitmap_set_page(i * 0x1000, true);
 
 	while (1)
 	{
@@ -113,6 +154,7 @@ int kernel_main(uint32_t addr, uint32_t magic)
 		draw_text(0, 0, "PotatOS", 255, 255, 255);
 
 		videobuffer_draw_vga_buffer(vga_get_buffer(), 100, 37);
+		draw_bitmap();
 		framebuffer_flip();
 	}
 
