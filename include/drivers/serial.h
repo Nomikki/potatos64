@@ -1,5 +1,5 @@
-#ifndef __drivers__serial__
-#define __drivers__serial__
+#ifndef DRIVERS_SERIAL_H_
+#define DRIVERS_SERIAL_H_
 
 #include <stdarg.h>
 #include <types.h>
@@ -41,4 +41,4 @@ extern void serial_writeline(char *str);
 extern void serial_write_str(char *str);
 extern void printfs(const char *format, ...);
 
-#endif
+#endif // DRIVERS_SERIAL_H_

@@ -1,5 +1,5 @@
-#ifndef __drivers__framebuffer__framebuffer__
-#define __drivers__framebuffer__framebuffer__
+#ifndef DRIVERS_FRAMEBUFFER_FRAMEBUFFER_H_
+#define DRIVERS_FRAMEBUFFER_FRAMEBUFFER_H_
 
 #include <types.h>
 
@@ -35,4 +35,4 @@ extern void plot_pixel(uint32_t x, uint32_t y, uint8_t r, uint8_t g, uint8_t b);
 extern void framebuffer_flip();
 extern void videobuffer_draw_vga_buffer(uint16_t *vga_buf, int width, int height);
 
-#endif
+#endif // DRIVERS_FRAMEBUFFER_FRAMEBUFFER_H_

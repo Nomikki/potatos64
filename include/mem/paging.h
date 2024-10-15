@@ -1,5 +1,5 @@
-#ifndef __mem__paging__
-#define __mem__paging__
+#ifndef MEM_PAGING_H_
+#define MEM_PAGING_H_
 
 #include <types.h>
 
@@ -47,4 +47,4 @@ extern uint64_t is_physical_memory_mapped(uint64_t physical_address, uint64_t *p
 extern uint64_t align_to_page(uint64_t address);
 extern void *get_physical_address(uint64_t virtual_address);
 
-#endif
+#endif // MEM_PAGING_H_

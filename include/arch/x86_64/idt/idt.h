@@ -1,5 +1,5 @@
-#ifndef __arch__x86_64__idt__
-#define __arch__x86_64__idt__
+#ifndef ARCH_X86_64_IDT_IDT_H_
+#define ARCH_X86_64_IDT_IDT_H_
 
 #include <types.h>
 
@@ -118,4 +118,4 @@ extern struct cpu_status *interrupt_dispatch(struct cpu_status *context);
 
 extern void idt_init();
 
-#endif
+#endif // ARCH_X86_64_IDT_IDT_H_

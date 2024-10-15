@@ -1,5 +1,5 @@
-#ifndef __drivers__keyboard__
-#define __drivers__keyboard__
+#ifndef DRIVERS_KEYBOARD_H_
+#define DRIVERS_KEYBOARD_H_
 
 #include <types.h>
 
@@ -98,4 +98,4 @@ enum kernel_scancodes
 extern void keyboard_init();
 extern void keyboard_driver_irq_handler();
 
-#endif
+#endif // DRIVERS_KEYBOARD_H_

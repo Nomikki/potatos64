@@ -1,5 +1,5 @@
-#ifndef __mem__pmm__
-#define __mem__pmm__
+#ifndef MEM_PMM_H_
+#define MEM_PMM_H_
 
 #include <types.h>
 
@@ -7,4 +7,4 @@
 
 extern void pmm_init();
 
-#endif
+#endif // MEM_PMM_H_

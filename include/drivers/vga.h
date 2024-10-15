@@ -1,5 +1,5 @@
-#ifndef __drivers__vga__
-#define __drivers__vga__
+#ifndef DRIVERS_VGA_H_
+#define DRIVERS_VGA_H_
 
 #include <types.h>
 
@@ -44,4 +44,4 @@ extern void enable_cursor(uint8_t start, uint8_t end);
 extern void vga_resize(int new_width, int new_height);
 extern uint16_t *vga_get_buffer();
 
-#endif
+#endif // DRIVERS_VGA_H_

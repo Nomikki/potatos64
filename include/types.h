@@ -1,5 +1,5 @@
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef TYPES_H_
+#define TYPES_H_
 
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
@@ -17,4 +17,4 @@ typedef uint8_t bool;
 
 typedef unsigned int size_t;
 
-#endif
+#endif // TYPES_H_
