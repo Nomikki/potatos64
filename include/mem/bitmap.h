@@ -2,7 +2,7 @@
 #define MEM_BITMAP_H_
 #include <types.h>
 
-extern uint64_t *bitmap_init(uint32_t size);
+extern uint64_t *init_bitmap(uint32_t size);
 extern int is_page_free(uint64_t page_index);
 extern void set_page_used(uint64_t page_index);
 extern uint64_t allocate_physical_page();

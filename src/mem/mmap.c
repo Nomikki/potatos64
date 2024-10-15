@@ -12,7 +12,7 @@ const char *mmap_types[] = {
     "NVS         ",
     "Defective   "};
 
-void mmap_parse(struct multiboot_tag_mmap *mmap_root)
+void parse_mmap(struct multiboot_tag_mmap *mmap_root)
 {
   int total_entries = 0;
   uint64_t free_memory = 0;

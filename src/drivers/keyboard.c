@@ -12,7 +12,7 @@ uint8_t buf_position = 0;
 uint8_t current_state = 0;
 uint8_t current_modifiers = 0;
 
-void keyboard_init()
+void init_keyboard()
 {
   current_state = NORMAL_STATE;
 }

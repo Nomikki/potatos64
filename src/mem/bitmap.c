@@ -11,7 +11,7 @@ uint16_t *bitmap = NULL;
 
 int total_pages = 0;
 
-uint64_t *bitmap_init(uint32_t size)
+uint64_t *init_bitmap(uint32_t size)
 {
 
   // debug

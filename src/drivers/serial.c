@@ -1,8 +1,9 @@
 #include <drivers/serial.h>
 #include <drivers/ports.h>
 
-int serial_init()
+int init_serial()
 {
+
   outportb(PORT_COM1 + INTERRUPT_REGISTER, DISABLE_INTERRUPTS);                                                           // Disable interrupts
   outportb(PORT_COM1 + LINE_CONTROL_REGISTER, ENABLE_DLAB);                                                               // Enable DLAB (set baud rate divisor)
   outportb(PORT_COM1 + BAUDRATE_LEAST_SIGNIFANT, 0x03);                                                                   // Set divisor to 3 (low byte) 38400 baud
@@ -19,7 +20,7 @@ int is_transmit_empty()
   return inportb(PORT_COM1 + LINE_STATUS_REGISTER) & TRANSMITTER_HOLDING_REGISTER_EMPTY;
 }
 
-void serial_write(char ch)
+void write_serial(char ch)
 {
 
   while (is_transmit_empty() == 0)
@@ -27,22 +28,22 @@ void serial_write(char ch)
   outportb(PORT_COM1, ch);
 }
 
-void serial_writeline(char *str)
+void writeline_serial(char *str)
 {
   for (int i = 0; 1; i++)
   {
     char ch = str[i];
     if (ch == '\0')
     {
-      serial_write('\r');
-      serial_write('\n');
+      write_serial('\r');
+      write_serial('\n');
       return;
     }
-    serial_write(ch);
+    write_serial(ch);
   }
 }
 
-void serial_write_str(char *str)
+void write_str_serial(char *str)
 {
 
   for (int i = 0; 1; i++)
@@ -52,7 +53,7 @@ void serial_write_str(char *str)
     {
       return;
     }
-    serial_write(ch);
+    write_serial(ch);
   }
 }
 
@@ -74,7 +75,7 @@ void printfs(const char *format, ...)
         int value = va_arg(args, int);
         char buffer[32];
         itoa(value, buffer, 10);
-        serial_write_str(buffer);
+        write_str_serial(buffer);
         break;
       }
       case 'x':
@@ -82,7 +83,7 @@ void printfs(const char *format, ...)
         int value = va_arg(args, int);
         char buffer[32];
         itoa(value, buffer, 16);
-        serial_write_str(buffer);
+        write_str_serial(buffer);
         break;
       }
       case 'b':
@@ -90,7 +91,7 @@ void printfs(const char *format, ...)
         int value = va_arg(args, int);
         char buffer[32];
         itoa(value, buffer, 2);
-        serial_write_str(buffer);
+        write_str_serial(buffer);
         break;
       }
       case 'p':
@@ -102,38 +103,38 @@ void printfs(const char *format, ...)
         itoa64(value, buffer, 16);
         int len_of_value = strlen(buffer);
 
-        serial_write_str("0x");
+        write_str_serial("0x");
         for (int l = 0; l < 16 - len_of_value; l++)
         {
-          serial_write('0');
+          write_serial('0');
         }
 
-        serial_write_str(buffer);
+        write_str_serial(buffer);
         break;
       }
       case 's':
       {
         char *str = va_arg(args, char *);
-        serial_write_str(str);
+        write_str_serial(str);
         break;
       }
       case 'c':
       {
         char ch = (char)va_arg(args, int);
-        serial_write(ch);
+        write_serial(ch);
         break;
       }
       default:
       {
-        serial_write('%');
-        serial_write(format[i]);
+        write_serial('%');
+        write_serial(format[i]);
         break;
       }
       }
     }
     else
     {
-      serial_write(format[i]);
+      write_serial(format[i]);
     }
   }
 

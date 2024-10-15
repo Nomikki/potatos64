@@ -87,8 +87,8 @@ struct cpu_status
 // end of interrupt
 #define PIC_EOI 0x20
 
-extern void idt_set_entry(uint8_t vector, void *handler, uint8_t dpl);
-extern void idt_load();
+extern void set_idt_entry(uint8_t vector, void *handler, uint8_t dpl);
+extern void load_idt();
 
 extern void interrupt_service_routine_0();
 extern void interrupt_service_routine_1();
@@ -116,6 +116,6 @@ extern void interrupt_service_routine_255();
 
 extern struct cpu_status *interrupt_dispatch(struct cpu_status *context);
 
-extern void idt_init();
+extern void init_idt();
 
 #endif // ARCH_X86_64_IDT_IDT_H_

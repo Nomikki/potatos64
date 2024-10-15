@@ -35,10 +35,10 @@
 
 #define TRANSMITTER_HOLDING_REGISTER_EMPTY 0x20
 
-extern int serial_init();
-extern void serial_write(char ch);
-extern void serial_writeline(char *str);
-extern void serial_write_str(char *str);
+extern int init_serial();
+extern void write_serial(char ch);
+extern void writeline_serial(char *str);
+extern void write_str_serial(char *str);
 extern void printfs(const char *format, ...);
 
 #endif // DRIVERS_SERIAL_H_

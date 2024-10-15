@@ -95,7 +95,7 @@ enum kernel_scancodes
   // TODO
 };
 
-extern void keyboard_init();
+extern void init_keyboard();
 extern void keyboard_driver_irq_handler();
 
 #endif // DRIVERS_KEYBOARD_H_

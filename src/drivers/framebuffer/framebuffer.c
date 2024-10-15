@@ -10,13 +10,13 @@ extern struct multiboot_tag_framebuffer *tagfb;
 extern char _binary_font_psf_start;
 int font_bytesPerLine;
 
-void framebuffer_init()
+void init_framebuffer()
 {
   font = (PSF_font *)&_binary_font_psf_start;
   font_bytesPerLine = (font->width + 7) / 8;
 }
 
-void framebuffer_clear(uint8_t r, uint8_t g, uint8_t b)
+void clear_framebuffer(uint8_t r, uint8_t g, uint8_t b)
 {
   uint64_t size = tagfb->common.framebuffer_width * tagfb->common.framebuffer_height;
   uint32_t color = (r << 16) | (g << 8) | b;
@@ -58,7 +58,7 @@ void draw_text(int cx, int cy, const char *text, uint8_t r, uint8_t g, uint8_t b
   }
 }
 
-void videobuffer_draw_vga_buffer(uint16_t *vga_buf, int width, int height)
+void draw_vga_buffer(uint16_t *vga_buf, int width, int height)
 {
   uint8_t r = 192;
   uint8_t g = 192;
@@ -87,7 +87,7 @@ void plot_pixel(uint32_t x, uint32_t y, uint8_t r, uint8_t g, uint8_t b)
   framebuffer_buffer[column + row] = (r << 16) | (g << 8) | b;
 }
 
-void framebuffer_flip()
+void flip_framebuffer()
 {
   uint64_t size = tagfb->common.framebuffer_width * tagfb->common.framebuffer_height;
 

@@ -7,7 +7,7 @@
 
 struct interrupt_descriptor idt[IDT_SIZE];
 
-void idt_set_entry(uint8_t vector, void *handler, uint8_t dpl)
+void set_idt_entry(uint8_t vector, void *handler, uint8_t dpl)
 {
   uint64_t handler_addr = (uint64_t)handler;
 
@@ -22,7 +22,7 @@ void idt_set_entry(uint8_t vector, void *handler, uint8_t dpl)
   entry->ist = 0;
 }
 
-void idt_load()
+void load_idt()
 {
   struct idtr idt_reg;
   idt_reg.limit = 0xFFF;
@@ -31,7 +31,7 @@ void idt_load()
   __asm__ __volatile__("lidt (%0)" : : "r"(&idt_reg) : "memory");
 }
 
-void idt_init()
+void init_idt()
 {
   __asm__ volatile("cli");
 
@@ -47,30 +47,30 @@ void idt_init()
     idt[i].address_high = 0;
   }
 
-  idt_set_entry(0x00, interrupt_service_routine_0, 0);
-  idt_set_entry(0x01, interrupt_service_routine_1, 0);
-  idt_set_entry(0x02, interrupt_service_routine_2, 0);
-  idt_set_entry(0x03, interrupt_service_routine_3, 0);
-  idt_set_entry(0x04, interrupt_service_routine_4, 0);
-  idt_set_entry(0x05, interrupt_service_routine_5, 0);
-  idt_set_entry(0x06, interrupt_service_routine_6, 0);
-  idt_set_entry(0x07, interrupt_service_routine_7, 0);
-  idt_set_entry(0x08, interrupt_service_routine_err_8, 0);
-  idt_set_entry(0x09, interrupt_service_routine_9, 0);
+  set_idt_entry(0x00, interrupt_service_routine_0, 0);
+  set_idt_entry(0x01, interrupt_service_routine_1, 0);
+  set_idt_entry(0x02, interrupt_service_routine_2, 0);
+  set_idt_entry(0x03, interrupt_service_routine_3, 0);
+  set_idt_entry(0x04, interrupt_service_routine_4, 0);
+  set_idt_entry(0x05, interrupt_service_routine_5, 0);
+  set_idt_entry(0x06, interrupt_service_routine_6, 0);
+  set_idt_entry(0x07, interrupt_service_routine_7, 0);
+  set_idt_entry(0x08, interrupt_service_routine_err_8, 0);
+  set_idt_entry(0x09, interrupt_service_routine_9, 0);
 
-  idt_set_entry(0x0A, interrupt_service_routine_err_10, 0);
-  idt_set_entry(0x0B, interrupt_service_routine_err_11, 0);
-  idt_set_entry(0x0C, interrupt_service_routine_err_12, 0);
-  idt_set_entry(0x0D, interrupt_service_routine_err_13, 0);
-  idt_set_entry(0x0E, interrupt_service_routine_err_14, 0);
-  idt_set_entry(0x0F, interrupt_service_routine_15, 0);
-  idt_set_entry(0x10, interrupt_service_routine_16, 0);
-  idt_set_entry(0x11, interrupt_service_routine_err_17, 0);
-  idt_set_entry(0x12, interrupt_service_routine_18, 0);
+  set_idt_entry(0x0A, interrupt_service_routine_err_10, 0);
+  set_idt_entry(0x0B, interrupt_service_routine_err_11, 0);
+  set_idt_entry(0x0C, interrupt_service_routine_err_12, 0);
+  set_idt_entry(0x0D, interrupt_service_routine_err_13, 0);
+  set_idt_entry(0x0E, interrupt_service_routine_err_14, 0);
+  set_idt_entry(0x0F, interrupt_service_routine_15, 0);
+  set_idt_entry(0x10, interrupt_service_routine_16, 0);
+  set_idt_entry(0x11, interrupt_service_routine_err_17, 0);
+  set_idt_entry(0x12, interrupt_service_routine_18, 0);
 
-  idt_set_entry(0x20, interrupt_service_routine_32, 0); // timer
-  idt_set_entry(0x21, interrupt_service_routine_33, 0); // keyboard
-  idt_set_entry(0x22, interrupt_service_routine_34, 0);
+  set_idt_entry(0x20, interrupt_service_routine_32, 0); // timer
+  set_idt_entry(0x21, interrupt_service_routine_33, 0); // keyboard
+  set_idt_entry(0x22, interrupt_service_routine_34, 0);
 
   // remap
   outportb(PIC_MASTER_COMMAND, PIC_RESET);
@@ -88,7 +88,7 @@ void idt_init()
   outportb(PIC_MASTER_DATA, PIC_USE_ALL_INTERRUPTS);
   outportb(PIC_SLAVE_DATA, PIC_USE_ALL_INTERRUPTS);
 
-  idt_load();
+  load_idt();
   __asm__ volatile("sti");
 }
 
@@ -199,9 +199,9 @@ struct cpu_status *interrupt_dispatch(struct cpu_status *context)
 
     while (1)
     {
-      framebuffer_clear(128, 27, 26);
-      videobuffer_draw_vga_buffer(vga_get_buffer(), 100, 37);
-      framebuffer_flip();
+      clear_framebuffer(128, 27, 26);
+      draw_vga_buffer(vga_get_buffer(), 100, 37);
+      flip_framebuffer();
       __asm__("hlt");
     }
   }

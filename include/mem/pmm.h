@@ -5,6 +5,6 @@
 
 #define PAGE_SIZE 4096 // 4kb per page
 
-extern void pmm_init();
+extern void init_pmm();
 
 #endif // MEM_PMM_H_

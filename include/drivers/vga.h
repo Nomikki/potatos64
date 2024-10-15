@@ -29,7 +29,7 @@ enum vga_color
   VGA_COLOR_WHITE = 15,
 };
 
-extern void vga_clear_screen();
+extern void vga_clear_vga_screen();
 extern void vga_write_char(int ch, int x, int y);
 
 extern void vga_set_cursor_pos(int x, int y);

@@ -36,10 +36,10 @@ void init_memory()
 
 	printf("Memory available: : (%u MB), (%u KB)\n", all_memory / 1024, all_memory);
 
-	mmap_parse(tagmmap);
+	parse_mmap(tagmmap);
 
 	// find area for bitmap and return its address. If not enough memory/error, return NULL.
-	bitmap_address = (void *)(bitmap_init(all_memory / (4 * 16))) - _HIGHER_HALF_KERNEL_MEM_START;
+	bitmap_address = (void *)(init_bitmap(all_memory / (4 * 16))) - _HIGHER_HALF_KERNEL_MEM_START;
 
 	// then find all reserved areas and mark them to bitmap
 
@@ -100,13 +100,7 @@ void init_video()
 	printf("framebuffer type: %i\n", tagfb->common.framebuffer_type);
 	*/
 	printf("\n");
-	framebuffer_init();
-}
-
-void testMemoryArea(void *address, uint32_t value)
-{
-	uint64_t *ptr = (uint64_t *)address;
-	ptr = value;
+	init_framebuffer();
 }
 
 void hexdump(const void *start, const void *end)
@@ -156,8 +150,8 @@ int kernel_main(uint32_t addr, uint32_t magic)
 {
 	vga_clear_screen();
 	enable_cursor(14, 15);
-	serial_init();
-	idt_init();
+	init_serial();
+	init_idt();
 	init_video();
 	init_memory();
 
@@ -167,14 +161,13 @@ int kernel_main(uint32_t addr, uint32_t magic)
 
 	while (1)
 	{
-		framebuffer_clear(26, 27, 38);
+		clear_framebuffer(26, 27, 38);
 		draw_text(0, 0, "PotatOS", 255, 255, 255);
 
-		videobuffer_draw_vga_buffer(vga_get_buffer(), 100, 37);
-
+		draw_vga_buffer(vga_get_buffer(), 100, 37);
 		draw_bitmap();
 
-		framebuffer_flip();
+		flip_framebuffer();
 	}
 
 	while (1)
