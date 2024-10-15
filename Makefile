@@ -48,6 +48,7 @@ OBJECTS = obj/boot/boot.o \
 					obj/mem/mmap.o \
 					obj/mem/pmm.o \
 					obj/mem/bitmap.o \
+					obj/mem/paging.o
 
 all: clean iso createFont run
 
@@ -85,4 +86,4 @@ createFont:
 run:
 # qemu-system-x86_64.exe -cdrom $(ISO_FILENAME) -serial file:"serial.log"
 	
-	$(QEMU_SYSTEM) -monitor unix:qemu-monitor-socket,server,nowait -cpu qemu64,+x2apic  -cdrom $(ISO_FILENAME) -serial file:"serial.log" -m 16M -no-reboot -no-shutdown
+	$(QEMU_SYSTEM) -monitor unix:qemu-monitor-socket,server,nowait -cpu qemu64,+x2apic  -cdrom $(ISO_FILENAME) -serial file:"serial.log" -m 128M -no-reboot -no-shutdown

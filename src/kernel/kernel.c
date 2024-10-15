@@ -8,6 +8,7 @@
 #include <drivers/framebuffer/framebuffer.h>
 #include <mem/pmm.h>
 #include <mem/mmap.h>
+#include <mem/paging.h>
 
 #define _HIGHER_HALF_KERNEL_MEM_START 0xffffffff80000000
 
@@ -24,6 +25,8 @@ extern uint64_t _kernel_end;
 extern uint64_t _kernel_physical_end;
 int64_t all_memory = 0;
 
+extern uint64_t p4_table[];
+
 void init_memory()
 {
 	tagmem = (struct multiboot_tag_basic_meminfo *)(multiboot_basic_meminfo + _HIGHER_HALF_KERNEL_MEM_START);
@@ -36,33 +39,50 @@ void init_memory()
 	mmap_parse(tagmmap);
 
 	// find area for bitmap and return its address. If not enough memory/error, return NULL.
-	bitmap_address = bitmap_init(all_memory / (4 * 16));
+	bitmap_address = (void *)(bitmap_init(all_memory / (4 * 16))) - _HIGHER_HALF_KERNEL_MEM_START;
 
 	// then find all reserved areas and mark them to bitmap
 
-	// printf("Bitmap address: %p\n", bitmap_address);
-	// printf("Kernel physical end: %p\n", &_kernel_physical_end);
+	printf("Kernel physical end: %p\n", &_kernel_physical_end);
+	printf("Bitmap address: %p\n", bitmap_address);
+	setup_paging();
 }
 
+// just placeholder
 void draw_bitmap()
 {
 
 	uint32_t bitmap_size = all_memory / (4 * 16);
 	uint8_t c = 64;
-	uint64_t test_address = 0;
+	uint64_t test_page = 0;
+
+	/*
+	for (int y = 0; y < 24; y++)
+	{
+		for (int x = 0; x < 24; x++)
+		{
+			plot_pixel(x, y, 255, 0, 0);
+		}
+	}
+	*/
+
+	if (bitmap_size > 512)
+		bitmap_size = 512;
+
 	for (int i = 0; i < bitmap_size; i++)
 	{
 		for (int x = 0; x < 16; x++)
 		{
 
-			// if ((bitmap_address[i] >> x) & 1 == 1)
-			if (bitmap_test(test_address) != 0)
+			if (is_page_free(test_page) == 0)
 				c = 255;
 			else
 				c = 0;
 
-			plot_pixel(800 - 48 + x, i + 16, c, c, c);
-			test_address += 0x1000;
+			int y = (i + 16) % 600;
+
+			plot_pixel(800 - 64 + x, y, c, c, c);
+			test_page++;
 		}
 	}
 }
@@ -141,12 +161,9 @@ int kernel_main(uint32_t addr, uint32_t magic)
 	init_video();
 	init_memory();
 
-	printf("location of main: %p\n", (void *)kernel_main - _HIGHER_HALF_KERNEL_MEM_START);
+	// printf("location of main: %p\n", (void *)kernel_main - _HIGHER_HALF_KERNEL_MEM_START);
 
 	// hexdump(vga_get_buffer(), (vga_get_buffer() + 200));
-
-	for (int i = 0; i < 1000; i++)
-		bitmap_set_page(i * 0x1000, true);
 
 	while (1)
 	{
@@ -154,7 +171,9 @@ int kernel_main(uint32_t addr, uint32_t magic)
 		draw_text(0, 0, "PotatOS", 255, 255, 255);
 
 		videobuffer_draw_vga_buffer(vga_get_buffer(), 100, 37);
+
 		draw_bitmap();
+
 		framebuffer_flip();
 	}
 
