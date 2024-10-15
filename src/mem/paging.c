@@ -18,7 +18,7 @@ uint64_t read_cr3()
 
 uint64_t align_to_page(uint64_t address)
 {
-  return address & ~0xfff;
+  return address & PAGE_MASK;
 }
 
 void print_pagedir(uint64_t *pagedir, const char *name, uint32_t start, uint32_t count, uint8_t type, uint64_t offset)
@@ -32,7 +32,7 @@ void print_pagedir(uint64_t *pagedir, const char *name, uint32_t start, uint32_t
 
       if (type == 0 || type == 1)
       {
-        struct PML4_Entry *entry = (struct PML4_Entry *)&pagedir[i];
+        struct PML4_entry *entry = (struct PML4_entry *)&pagedir[i];
         printf("p: %i, rw: %i, u: %i, pwt: %i, pcd: %i, acc: %i, ps: %i, addr: 0x%x, nx: %i", entry->present, entry->rw, entry->user_supervisor, entry->pwt, entry->pcd, entry->accessed, entry->ps, entry->pdt_addr << 12, entry->nx);
       }
 
@@ -59,69 +59,41 @@ void print_pagedir(uint64_t *pagedir, const char *name, uint32_t start, uint32_t
   printf("\n");
 }
 
-void decompose_virtual_address(uint64_t virtual_address, uint64_t virtual_offset)
-{
-  uint64_t pml4_index = (virtual_address >> 39) & 0x1FF;
-  uint64_t pdpr_index = (virtual_address >> 30) & 0x1FF;
-  uint64_t pd_index = (virtual_address >> 21) & 0x1FF;
-  uint64_t pt_index = (virtual_address >> 12) & 0xFFF;
-  uint64_t offset = virtual_address & 0xfff;
-
-  printf("Decomposing %p\n", virtual_address);
-  printf("pml4 index: %u\n", pml4_index);
-  printf("pdpr index: %u\n", pdpr_index);
-  printf("pd index:   %u\n", pd_index);
-  printf("pt index:   %u\n", pt_index);
-  printf("offset      %u\n", offset);
-  printf("\n");
-
-  uint64_t pdt_address = (void *)(&p4_table[pml4_index]) - virtual_offset;
-  printf("pdt adress: %p\n", pdt_address);
-
-  uint64_t *pdt_table = (uint64_t *)(pdt_address & ~0xFFF); // remove lowest 12 bits
-  uint64_t pd_address = (void *)(&pdt_table[pdpr_index]) - virtual_offset;
-  printf("pd adress: %p\n", pd_address);
-
-  uint64_t *pd_table = (uint64_t *)(pd_address & ~0xFFF);
-  uint64_t pt_address = (void *)&pd_table[pd_index] - virtual_offset;
-  printf("pt adress: %p\n", pt_address);
-}
-
 uint64_t is_physical_memory_mapped(uint64_t physical_address, uint64_t *pml4_table)
 {
-  uint64_t pml4_index = (physical_address >> 39) & 0x1FF;
-  uint64_t pdpt_index = (physical_address >> 30) & 0x1FF;
-  uint64_t pd_index = (physical_address >> 21) & 0x1FF;
-  uint64_t pt_index = (physical_address >> 12) & 0x1FF;
+  uint64_t pml4_index = (physical_address >> 39) & ADDRESS_MASK;
+  uint64_t pdpt_index = (physical_address >> 30) & ADDRESS_MASK;
+  uint64_t pd_index = (physical_address >> 21) & ADDRESS_MASK;
+  uint64_t pt_index = (physical_address >> 12) & ADDRESS_MASK;
 
   uint64_t pdpt_entry = pml4_table[pml4_index];
-  if (!(pdpt_entry & 1))
+  if (!(pdpt_entry & PRESENT_BIT))
   {
     return 0;
   }
 
-  uint64_t *pdpt_table = (uint64_t *)(pdpt_entry & ~0xFFF);
+  uint64_t *pdpt_table = (uint64_t *)(pdpt_entry & PAGE_MASK);
   uint64_t pd_entry = pdpt_table[pdpt_index];
-  if (!(pd_entry & 1))
+  if (!(pd_entry & PRESENT_BIT))
   {
     return 0;
   }
 
-  uint64_t *pd_table = (uint64_t *)(pd_entry & ~0xFFF);
+  uint64_t *pd_table = (uint64_t *)(pd_entry & PAGE_MASK);
   uint64_t pt_entry = pd_table[pd_index];
-  if (!(pt_entry & 1))
+  if (!(pt_entry & PRESENT_BIT))
   {
     return 0;
   }
 
-  uint64_t *pt_table = (uint64_t *)(pt_entry & ~0xFFF);
+  uint64_t *pt_table = (uint64_t *)(pt_entry & PAGE_MASK);
   uint64_t page_entry = pt_table[pt_index];
   if (!(page_entry & 1))
   {
     return 0;
   }
 
-  if ((page_entry & ~0xFFF) == (physical_address & ~0xFFF))
+  if ((page_entry & PAGE_MASK) == (physical_address & PAGE_MASK))
   {
     return 1;
   }
@@ -133,8 +105,8 @@ void setup_paging()
 {
   printf("CR3: %x\n", read_cr3());
   uint64_t test_virtual_address = 0x40000000;
-  uint64_t test_physical_address = align_to_page(0x7FF0000); // 128MB
-  map_page(test_virtual_address, test_physical_address, p4_table);
+  uint64_t test_physical_address = 0x7FF0000; // 128MB
+  map_page(test_virtual_address, test_physical_address, p4_table, PRESENT_BIT | RW_BIT);
 
   *(uint64_t *)test_virtual_address = 0xDEADBEEF;
 
@@ -143,38 +115,65 @@ void setup_paging()
     printf("Woop woop \\o/\n");
   else
     printf(":(\n");
+
+  // and then translate addresses
+  uint64_t paddr = get_physical_address(test_virtual_address);
+  printf("paddr: %p\n", paddr);
 }
 
-void map_page(uint64_t virtual_address, uint64_t physical_address, uint64_t *pml4_table)
+void *get_physical_address(uint64_t virtual_address)
+{
+  uint64_t pml4_index = (virtual_address >> 39) & ADDRESS_MASK;
+  uint64_t pdpt_index = (virtual_address >> 30) & ADDRESS_MASK;
+  uint64_t pd_index = (virtual_address >> 21) & ADDRESS_MASK;
+  uint64_t pt_index = (virtual_address >> 12) & ADDRESS_MASK;
+  uint64_t offset = virtual_address & PAGE_MASK;
+
+  uint64_t *pml4_table = (uint64_t *)read_cr3();
+  uint64_t pdpt_address = pml4_table[pml4_index];
+
+  uint64_t *pdpt_table = (uint64_t *)(pdpt_address & PAGE_MASK);
+  uint64_t pd_address = pdpt_table[pdpt_index];
+
+  uint64_t *pd_table = (uint64_t *)(pd_address & PAGE_MASK);
+  uint64_t pt_address = pd_table[pd_index];
+
+  uint64_t *pt_table = (uint64_t *)(pt_address & PAGE_MASK);
+  uint64_t physical_address = (pt_table[pt_index] & PAGE_MASK) | offset;
+
+  return physical_address;
+}
+
+void map_page(uint64_t virtual_address, uint64_t physical_address, uint64_t *pml4_table, uint8_t flags)
 {
   virtual_address = align_to_page(virtual_address);
   physical_address = align_to_page(physical_address);
 
-  uint64_t pml4_index = (virtual_address >> 39) & 0x1FF;
-  uint64_t pdpt_index = (virtual_address >> 30) & 0x1FF;
-  uint64_t pd_index = (virtual_address >> 21) & 0x1FF;
-  uint64_t pt_index = (virtual_address >> 12) & 0x1FF;
+  uint64_t pml4_index = (virtual_address >> 39) & ADDRESS_MASK;
+  uint64_t pdpt_index = (virtual_address >> 30) & ADDRESS_MASK;
+  uint64_t pd_index = (virtual_address >> 21) & ADDRESS_MASK;
+  uint64_t pt_index = (virtual_address >> 12) & ADDRESS_MASK;
 
-  if (!(pml4_table[pml4_index] & 1))
+  if (!(pml4_table[pml4_index] & PRESENT_BIT))
   {
     uint64_t pdpt = allocate_physical_page();
-    pml4_table[pml4_index] = pdpt | 0x3;
+    pml4_table[pml4_index] = pdpt | flags;
   }
-  uint64_t *pdpt_table = (uint64_t *)(pml4_table[pml4_index] & ~0xFFF);
+  uint64_t *pdpt_table = (uint64_t *)(pml4_table[pml4_index] & PAGE_MASK);
 
-  if (!(pdpt_table[pdpt_index] & 1))
+  if (!(pdpt_table[pdpt_index] & PRESENT_BIT))
   {
     uint64_t pd = allocate_physical_page();
-    pdpt_table[pdpt_index] = pd | 0x3;
+    pdpt_table[pdpt_index] = pd | flags;
   }
-  uint64_t *pd_table = (uint64_t *)(pdpt_table[pdpt_index] & ~0xFFF);
+  uint64_t *pd_table = (uint64_t *)(pdpt_table[pdpt_index] & PAGE_MASK);
 
-  if (!(pd_table[pd_index] & 1))
+  if (!(pd_table[pd_index] & PRESENT_BIT))
   {
     uint64_t pt = allocate_physical_page();
-    pd_table[pd_index] = pt | 0x3;
+    pd_table[pd_index] = pt | flags;
   }
-  uint64_t *pt_table = (uint64_t *)(pd_table[pd_index] & ~0xFFF);
+  uint64_t *pt_table = (uint64_t *)(pd_table[pd_index] & PAGE_MASK);
 
-  pt_table[pt_index] = physical_address | 0x3;
+  pt_table[pt_index] = physical_address | flags;
 }

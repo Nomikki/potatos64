@@ -55,6 +55,10 @@ struct cpu_status
 #define PRESENT_BIT (1 << 7)
 #define DPL(dpl) (((dpl) & 0b11) << 5)
 
+#define ERR_P 0b0001
+#define ERR_RW 0b0010
+#define ERR_US 0b0100
+
 #define PIC_MASTER_COMMAND 0x20
 #define PIC_MASTER_DATA 0x21
 #define PIC_SLAVE_COMMAND 0xA0

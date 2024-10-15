@@ -3,7 +3,7 @@
 
 #include <types.h>
 
-struct PML4_Entry
+struct PML4_entry
 {
   uint64_t present : 1;         // page is present in memory
   uint64_t rw : 1;              // read/write flag (1 = writable, 0 = read only)
@@ -36,9 +36,15 @@ struct Pagetable_entry
   uint64_t nx : 1; // no execute bit
 } __attribute__((packed));
 
+#define PRESENT_BIT 0b1
+#define RW_BIT 0b10
+#define PAGE_MASK ~0xFFF
+#define ADDRESS_MASK 0x1FF
+
 extern void setup_paging();
-extern void map_page(uint64_t virtual_address, uint64_t physical_address, uint64_t *pml4_table);
+extern void map_page(uint64_t virtual_address, uint64_t physical_address, uint64_t *pml4_table, uint8_t flags);
 extern uint64_t is_physical_memory_mapped(uint64_t physical_address, uint64_t *pml4_table);
 extern uint64_t align_to_page(uint64_t address);
+extern void *get_physical_address(uint64_t virtual_address);
 
 #endif

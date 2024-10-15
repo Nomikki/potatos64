@@ -119,18 +119,49 @@ struct cpu_status *interrupt_dispatch(struct cpu_status *context)
       break;
 
     case 14:
-      printf("\nPage fault!\n");
+      printf("\nPage fault!\n\n");
 
       uint64_t faulting_address = read_cr2();
       // printf("error code (memory access that triggered the page fault): %x\n", context->error_code);
       printf("Error code: %b\n", context->error_code);
+      /*
       printf("0:%b = Present\n", context->error_code & 0b1 ? 1 : 0);
       printf("1:%b = Write\n", context->error_code & 0b10 ? 1 : 0);
       printf("2:%b = User\n", context->error_code & 0b100 ? 1 : 0);
       printf("3:%b = Reserved bit set\n", context->error_code & 0b1000 ? 1 : 0);
       printf("4:%b = Instruction fetch\n\n", context->error_code & 0b10000 ? 1 : 0);
+      */
+      switch (context->error_code)
+      {
+      case 0:
+        printf("Supervisory process tried to read a non-present page entry\n");
+        break;
+      case ERR_P:
+        printf("Supervisory process tried to read a page and caused a protection fault\n");
+        break;
+      case ERR_RW:
+        printf("Supervisory process tried to write to a non-present page entry\n");
+        break;
+      case ERR_RW | ERR_P:
+        printf("Supervisory process tried to write a page and caused a protection fault\n");
+        break;
+      case ERR_US:
+        printf("User process tried to read a non-present page entry\n");
+        break;
+      case ERR_US | ERR_P:
+        printf("User process tried to read a page and caused a protection fault\n");
+        break;
+      case ERR_US | ERR_RW:
+        printf("User process tried to write to a non-present page entry\n");
+        break;
+      case ERR_US | ERR_RW | ERR_P:
+        printf("User process tried to write a page and caused a protection fault\n");
+        break;
+      default:
+        break;
+      }
 
-      printf("Page fault at address: %p\n\n", faulting_address);
+      printf("\nPage fault at address: %p\n\n", faulting_address);
 
       printf("rax: %p   ", context->rax);
       printf("rbx: %p\n", context->rbx);
