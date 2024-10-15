@@ -156,35 +156,32 @@ start:
         jne .map_p2_table   ; if ecx < 512 then loop
 
 
-    ; All set... now we are nearly ready to enter into 64 bit
-    ; Is possible to move into cr3 only from another register
-    ; So let's move p4_table address into eax first
-    ; then into cr3
-    mov eax, (p4_table - KERNEL_VIRTUAL_ADDR)
-    mov cr3, eax
+    
+  mov ebx, cr0
+  and ebx, ~(1 << 31)
+  mov cr0, ebx
 
-    ; Now we can enable PAE
-    ; To do it we need to modify cr4, so first let's copy it into eax
-    ; we can't modify cr registers directly
-    mov eax, cr4
-    or eax, 1 << 5  ; Physical address extension bit
-    mov cr4, eax
+  ; Enable PAE
+  mov edx, cr4
+  or  edx, (1 << 5)
+  mov cr4, edx
+
+  ; Set LME (long mode enable)
+  mov ecx, 0xC0000080
+  rdmsr
+  or  eax, (1 << 8)
+  wrmsr
+
+  ; Replace 'pml4_table' with the appropriate physical address (and flags, if applicable)
+  mov eax, (p4_table - KERNEL_VIRTUAL_ADDR)
+  mov cr3, eax
+
+  ; Enable paging (and protected mode, if it isn't already active)
+  or ebx, (1 << 31) | (1 << 0)
+  mov cr0, ebx
+
+
     
-    ; Now set up the long mode bit
-    mov ecx, 0xC0000080
-    ; rdmsr is to read a a model specific register (msr)
-    ; it copy the values of msr into eax
-    rdmsr
-    or eax, 1 << 8
-    ; write back the value
-    wrmsr
-    
-    ; Now is time to enable paging
-    mov eax, cr0    ;cr0 contains the values we want to change
-    or eax, 1 << 31 ; Paging bit
-    or eax, 1 << 16 ; Write protect, cpu  can't write to read-only pages when
-                    ; privilege level is 0
-    mov cr0, eax    ; write back cr0
     ; load gdt 
     lgdt [gdt64.pointer_low - KERNEL_VIRTUAL_ADDR]
     jmp (0x8):(kernel_jumper - KERNEL_VIRTUAL_ADDR)
@@ -288,10 +285,10 @@ higher_half:
     ; The two lines below are needed to un map the kernel in the lower half
     ; But i'll leave them commented for now because the code in the kernel need 
     ; to be changed and some addresses need to be updated (i.e. multiboot stuff)
-    mov eax, 0x0
-    mov dword [(p4_table - KERNEL_VIRTUAL_ADDR) + 0], eax
-    mov rax, cr3
-    mov cr3, rax
+    ;mov eax, 0x0
+    ;mov dword [(p4_table - KERNEL_VIRTUAL_ADDR) + 0], eax
+    ;mov rax, cr3
+    ;mov cr3, rax
     call kernel_main
 
 		cli
@@ -306,10 +303,9 @@ p4_table: ;PML4
     resb 4096
 p3_table: ;PDPR
     resb 4096
-p3_table_hh: ;PDPR
-    resb 4096 
 p2_table: ;PDP
     resb 4096
+
 
 %if SMALL_PAGES == 1
 ; if SMALL_PAGES is defined it means we are using 4k pages
@@ -320,7 +316,8 @@ pt_tables:
 fbb_pt_tables:
     resb 8192
 %endif
-
+p3_table_hh: ;PDPR
+    resb 4096 
 ; This section will be used to get the multiboot info
 align 4096
 end_of_mapped_memory:
