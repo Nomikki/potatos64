@@ -13,7 +13,6 @@ int total_pages = 0;
 
 uint64_t *init_bitmap(uint32_t size)
 {
-
   // debug
   printf("Bitmap: %u bytes\n", size);
 

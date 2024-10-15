@@ -63,7 +63,7 @@ void vga_write_char(int ch, int x, int y)
     return;
   }
 
-  if (ch == 14)
+  if (ch == 14) // go one step to left / erase
   {
     if (cursorX > 0)
       cursorX--;

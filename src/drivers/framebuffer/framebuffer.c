@@ -30,6 +30,28 @@ void clear_framebuffer(uint8_t r, uint8_t g, uint8_t b)
   }
 }
 
+void draw_character(uint8_t ch, int cx, int cy, uint8_t r, uint8_t g, uint8_t b)
+{
+  uint8_t *glyph = (uint8_t *)&_binary_font_psf_start + font->headersize + (ch > 0 && ch < font->numglyph ? ch : 0) * font->bytesperglyph;
+
+  int mask;
+  for (uint32_t y = 0; y < font->height; y++)
+  {
+    mask = 1 << (font->width - 1);
+    for (uint32_t x = 0; x < font->width; x++)
+    {
+      if (*((unsigned int *)glyph) & mask)
+      {
+        plot_pixel(cx + x, cy + y, r, g, b);
+      }
+
+      mask >>= 1;
+    }
+
+    glyph += font_bytesPerLine;
+  }
+}
+
 void draw_text(int cx, int cy, const char *text, uint8_t r, uint8_t g, uint8_t b)
 {
   int len = strlen(text);
@@ -37,24 +59,7 @@ void draw_text(int cx, int cy, const char *text, uint8_t r, uint8_t g, uint8_t b
   for (int i = 0; i < len; i++)
   {
     uint8_t ch = text[i];
-    uint8_t *glyph = (uint8_t *)&_binary_font_psf_start + font->headersize + (ch > 0 && ch < font->numglyph ? ch : 0) * font->bytesperglyph;
-
-    int mask;
-    for (uint32_t y = 0; y < font->height; y++)
-    {
-      mask = 1 << (font->width - 1);
-      for (uint32_t x = 0; x < font->width; x++)
-      {
-        if (*((unsigned int *)glyph) & mask)
-        {
-          plot_pixel(cx + (i * font->width) + x, cy + y, r, g, b);
-        }
-
-        mask >>= 1;
-      }
-
-      glyph += font_bytesPerLine;
-    }
+    draw_character(ch, cx + (i * font->width), cy, r, g, b);
   }
 }
 

@@ -56,16 +56,6 @@ void draw_bitmap()
 	uint8_t c = 64;
 	uint64_t test_page = 0;
 
-	/*
-	for (int y = 0; y < 24; y++)
-	{
-		for (int x = 0; x < 24; x++)
-		{
-			plot_pixel(x, y, 255, 0, 0);
-		}
-	}
-	*/
-
 	if (bitmap_size > 512)
 		bitmap_size = 512;
 
