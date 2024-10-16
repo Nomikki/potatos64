@@ -5,13 +5,13 @@
 #include <drivers/keyboard.h>
 #include <drivers/framebuffer/framebuffer.h>
 
-struct interrupt_descriptor idt[IDT_SIZE];
+interrupt_descriptor idt[IDT_SIZE];
 
 void set_idt_entry(uint8_t vector, void *handler, uint8_t dpl)
 {
   uint64_t handler_addr = (uint64_t)handler;
 
-  struct interrupt_descriptor *entry = &idt[vector];
+  interrupt_descriptor *entry = &idt[vector];
   entry->address_low = handler_addr & 0xFFFF;
   entry->address_mid = (handler_addr >> 16) & 0xFFFF;
   entry->address_high = handler_addr >> 32;
@@ -24,7 +24,7 @@ void set_idt_entry(uint8_t vector, void *handler, uint8_t dpl)
 
 void load_idt()
 {
-  struct idtr idt_reg;
+  idtr idt_reg;
   idt_reg.limit = 0xFFF;
   idt_reg.base = (uint64_t)&idt;
   // asm volatile("lidt %0" ::"m"(&idt_reg));
@@ -99,7 +99,7 @@ uint64_t read_cr2()
   return cr2;
 }
 
-struct cpu_status *interrupt_dispatch(struct cpu_status *context)
+cpu_status *interrupt_dispatch(cpu_status *context)
 {
 
   uint8_t interrupt_number = context->vector_number;

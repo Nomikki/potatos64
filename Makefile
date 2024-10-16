@@ -48,7 +48,8 @@ OBJECTS = obj/boot/boot.o \
 					obj/mem/mmap.o \
 					obj/mem/pmm.o \
 					obj/mem/bitmap.o \
-					obj/mem/paging.o
+					obj/mem/paging.o \
+					obj/mem/vmm.o
 
 all: clean iso createFont run
 

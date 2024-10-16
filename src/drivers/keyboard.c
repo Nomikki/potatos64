@@ -1,12 +1,6 @@
 #include <drivers/keyboard.h>
 #include <stdio.h>
 
-typedef struct
-{
-  uint8_t keycode;
-  uint8_t status_mask;
-} key_event;
-
 key_event keyboard_buffer[MAX_KEYB_BUFFER_SIZE];
 uint8_t buf_position = 0;
 uint8_t current_state = 0;

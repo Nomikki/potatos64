@@ -28,7 +28,7 @@ void print_page(uint64_t *pagedir, uint64_t index, uint8_t type, uint64_t offset
   // pml4 and pdpt
   if (type == 0 || type == 1)
   {
-    struct PML4_entry *entry = (struct PML4_entry *)&pagedir;
+    PML4_entry *entry = (PML4_entry *)&pagedir;
     printf("p: %i, rw: %i, u: %i, pwt: %i, pcd: %i, acc: %i, ps: %i, addr: 0x%x, nx: %i",
            entry->present,
            entry->rw,
@@ -44,7 +44,7 @@ void print_page(uint64_t *pagedir, uint64_t index, uint8_t type, uint64_t offset
   // pd and pt
   if (type == 2 || type == 3)
   {
-    struct Pagetable_entry *entry = (struct Pagetable_entry *)&pagedir;
+    Pagetable_entry *entry = (Pagetable_entry *)&pagedir;
     printf("p: %i, rw: %i, u: %i, pwt: %i, pcd: %i, acc: %i, d: %i, p %i, g %i, addr: 0x%x, nx: %i",
            entry->present,
            entry->rw,

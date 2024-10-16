@@ -3,7 +3,7 @@
 
 #include <types.h>
 
-struct PML4_entry
+typedef struct __attribute__((packed))
 {
   uint64_t present : 1;         // page is present in memory
   uint64_t rw : 1;              // read/write flag (1 = writable, 0 = read only)
@@ -17,9 +17,9 @@ struct PML4_entry
   uint64_t pdt_addr : 40; // physical address of PDPT (page directory pointer table)
   uint64_t reserved : 11;
   uint64_t nx : 1; // no execute bit
-} __attribute__((packed));
+} PML4_entry;
 
-struct Pagetable_entry
+typedef struct __attribute__((packed))
 {
   uint64_t present : 1;         // page is present in memory
   uint64_t rw : 1;              // read/write flag (1 = writable, 0 = read only)
@@ -34,7 +34,7 @@ struct Pagetable_entry
   uint64_t pdt_addr : 40; // physical address of PDPT (page directory pointer table)
   uint64_t reserved : 11;
   uint64_t nx : 1; // no execute bit
-} __attribute__((packed));
+} Pagetable_entry;
 
 #define PRESENT_BIT 0b1
 #define RW_BIT 0b10

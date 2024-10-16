@@ -3,6 +3,12 @@
 
 #include <types.h>
 
+typedef struct
+{
+  uint8_t keycode;
+  uint8_t status_mask;
+} key_event;
+
 #define KB_DATA_PORT 0x60
 #define KB_READ_STATUS 0x64
 #define KB_WRITE_COMMAND 0x64

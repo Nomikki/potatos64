@@ -3,7 +3,7 @@
 
 #include <types.h>
 
-struct interrupt_descriptor
+typedef struct __attribute__((packed))
 {
   uint16_t address_low;
   uint16_t selector;
@@ -12,15 +12,15 @@ struct interrupt_descriptor
   uint16_t address_mid;
   uint32_t address_high;
   uint32_t reserved;
-} __attribute__((packed));
+} interrupt_descriptor;
 
-struct idtr
+typedef struct __attribute__((packed))
 {
   uint16_t limit;
   uint64_t base;
-} __attribute__((packed));
+} idtr;
 
-struct cpu_status
+typedef struct __attribute__((__packed__))
 {
   uint64_t r15;
   uint64_t r14;
@@ -46,7 +46,7 @@ struct cpu_status
   uint64_t iret_rflags;
   uint64_t iret_rsp;
   uint64_t iret_ss;
-} __attribute__((__packed__));
+} cpu_status;
 
 #define IDT_SIZE 256
 
@@ -114,7 +114,7 @@ extern void interrupt_service_routine_33();
 extern void interrupt_service_routine_34();
 extern void interrupt_service_routine_255();
 
-extern struct cpu_status *interrupt_dispatch(struct cpu_status *context);
+extern cpu_status *interrupt_dispatch(cpu_status *context);
 
 extern void init_idt();
 
