@@ -152,7 +152,7 @@ void *get_physical_address(uint64_t virtual_address)
   uint64_t pdpt_index = (virtual_address >> 30) & ADDRESS_MASK;
   uint64_t pd_index = (virtual_address >> 21) & ADDRESS_MASK;
   uint64_t pt_index = (virtual_address >> 12) & ADDRESS_MASK;
-  uint64_t offset = virtual_address & PAGE_MASK;
+  uint64_t offset = virtual_address & ~PAGE_MASK;
 
   uint64_t *pml4_table = (uint64_t *)read_cr3();
   uint64_t *pdpt_table = get_next_table_entry(pml4_table, pml4_index);
