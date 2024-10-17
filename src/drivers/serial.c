@@ -69,10 +69,16 @@ void printfs(const char *format, ...)
       i++;
       switch (format[i])
       {
+      case 'u':
+        uint32_t value = va_arg(args, uint64_t);
+        char buffer[32];
+        itoa64(value, buffer, 10);
+        write_str_serial(buffer);
+        break;
       case 'i':
       case 'd':
       {
-        int value = va_arg(args, int);
+        int value = va_arg(args, int64_t);
         char buffer[32];
         itoa(value, buffer, 10);
         write_str_serial(buffer);
@@ -80,15 +86,15 @@ void printfs(const char *format, ...)
       }
       case 'x':
       {
-        int value = va_arg(args, int);
+        int value = va_arg(args, uint64_t);
         char buffer[32];
-        itoa(value, buffer, 16);
+        itoa64(value, buffer, 16);
         write_str_serial(buffer);
         break;
       }
       case 'b':
       {
-        int value = va_arg(args, int);
+        int value = va_arg(args, uint64_t);
         char buffer[32];
         itoa(value, buffer, 2);
         write_str_serial(buffer);
@@ -96,6 +102,7 @@ void printfs(const char *format, ...)
       }
       case 'p':
       {
+
         void *ptr = va_arg(args, void *);
         uint64_t value = (uint64_t)ptr;
         char buffer[20];
