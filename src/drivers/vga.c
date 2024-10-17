@@ -1,4 +1,6 @@
 #include <drivers/vga.h>
+#include <drivers/serial.h>
+#include <mem/paging.h>
 
 uint16_t *vga_buffer = (uint16_t *)VGA_VIDEO_MEM_START;
 int16_t cursorX = 0;
@@ -9,6 +11,15 @@ int VGA_WIDTH = 80;
 int VGA_HEIGHT = 25;
 
 bool redirect_to_videomemory = false;
+
+void init_vga()
+{
+  printfs("vga addr: %p\n", vga_buffer);
+  printfs("vga addr: %p\n", get_physical_address(vga_buffer));
+
+  vga_clear_screen();
+  enable_cursor(14, 15);
+}
 
 uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg)
 {

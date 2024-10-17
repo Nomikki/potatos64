@@ -5,6 +5,7 @@
 
 // #ifdef USE_FRAMEBUFFER
 #define VGA_VIDEO_MEM_START (0xffffffffbd1D8000)
+
 // #else
 // #define VGA_VIDEO_MEM_START 0xFFFFFFFF800b8000
 // #endif
@@ -28,6 +29,8 @@ enum vga_color
   VGA_COLOR_LIGHT_BROWN = 14,
   VGA_COLOR_WHITE = 15,
 };
+
+extern void init_vga();
 
 extern void vga_clear_vga_screen();
 extern void vga_write_char(int ch, int x, int y);
