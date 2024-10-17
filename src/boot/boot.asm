@@ -76,7 +76,9 @@ global start
 global p2_table
 global p4_table
 global p3_table
-global p3_table_hh
+
+global fbb_pt_tables
+global vmm_area
 %if SMALL_PAGES == 1 
 global pt_tables
 %endif
@@ -86,6 +88,10 @@ global multiboot_mmap_data
 global multiboot_basic_meminfo
 global multiboot_acpi_info
 global read_multiboot
+global stack
+
+
+
 extern kernel_main
 
 [bits 32]
@@ -96,11 +102,11 @@ start:
 
     mov esp, stack.top - KERNEL_VIRTUAL_ADDR
     
-    mov eax, p3_table - KERNEL_VIRTUAL_ADDR; Copy p3_table address in eax
+    	mov eax, p3_table - KERNEL_VIRTUAL_ADDR; Copy p3_table address in eax
     or eax, PRESENT_BIT | WRITE_BIT        ; set writable and present bits to 1
     mov dword [(p4_table - KERNEL_VIRTUAL_ADDR) + 0], eax   ; Copy eax content into the entry 0 of p4 table
 
-    mov eax, p3_table_hh - KERNEL_VIRTUAL_ADDR  ; This will contain the mapping of the kernel in the higher half
+    mov eax, p3_table - KERNEL_VIRTUAL_ADDR  ; This will contain the mapping of the kernel in the higher half
     or eax, PRESENT_BIT | WRITE_BIT
     mov dword [(p4_table - KERNEL_VIRTUAL_ADDR) + 511 * 8], eax
 
@@ -114,10 +120,14 @@ start:
 
     mov eax, p2_table - KERNEL_VIRTUAL_ADDR
     or eax, PRESENT_BIT | WRITE_BIT
-    mov dword[(p3_table_hh - KERNEL_VIRTUAL_ADDR) + 510 * 8], eax
+    mov dword[(p3_table - KERNEL_VIRTUAL_ADDR) + 510 * 8], eax
 
-    %if SMALL_PAGES == 1
-    ; If we are using 4k pages we have an extra level of tables to map
+;    mov eax, p2_table - KERNEL_VIRTUAL_ADDR
+;    or eax, 8
+;    or eax, PRESENT_BIT | WRITE_BIT
+;    mov dword[(p3_table - KERNEL_VIRTUAL_ADDR) + 511 * 8], eax
+	
+	 ; If we are using 4k pages we have an extra level of tables to map
     mov ebx, 0
     mov eax, pt_tables - KERNEL_VIRTUAL_ADDR
     .map_pd_table:
@@ -127,34 +137,19 @@ start:
         inc ebx
         cmp ebx, PD_LOOP_LIMIT
         jne .map_pd_table
-    %endif
-    ; Now let's prepare a loop...
+		
+	; Now let's prepare a loop...
     mov ecx, 0  ; Loop counter
 
-    .map_p2_table:
-        mov eax, PAGE_SIZE  ; Size of the page
-        mul ecx             ; Multiply by counter
-        or eax, PAGE_TABLE_ENTRY ; We set: huge page bit (if on 2M pages), writable and present 
+    .map_pt_table:
+        mov eax, PAGE_SIZE  
+        mul ecx             
+        or eax, PAGE_TABLE_ENTRY 
 
-        ; Moving the computed value into p2_table entry defined by ecx * 8
-        ; ecx is the counter, 8 is the size of a single entry
-        %if SMALL_PAGES == 1
         mov [(pt_tables - KERNEL_VIRTUAL_ADDR) + ecx * 8], eax
-        %elif SMALL_PAGES == 0
-        mov [(p2_table - KERNEL_VIRTUAL_ADDR) + ecx * 8], eax
-        %endif
-
-        inc ecx             ; Let's increase ecx
-        cmp ecx, LOOP_LIMIT        ; have we reached 512 ? (1024 for small pages)
-                            ; When small pages is enabled:
-                            ; each table is 4k size. Each entry is 8bytes
-                            ; that is 512 entries in a table
-                            ; when small pages enabled: two tables are adjacent in memory
-                            ; they are mapped in the pdir during the map_pd_table cycle
-                            ; this is why the loop is up to 1024
-        
-        jne .map_p2_table   ; if ecx < 512 then loop
-
+        inc ecx
+        cmp ecx, LOOP_LIMIT
+        jne .map_pt_table  
 
     
   mov ebx, cr0
@@ -296,8 +291,10 @@ higher_half:
 	jmp .hang
 
 
-section .bss
+section .data
 
+
+section .bss
 align 4096
 p4_table: ;PML4
     resb 4096
@@ -305,19 +302,13 @@ p3_table: ;PDPR
     resb 4096
 p2_table: ;PDP
     resb 4096
-
-
-%if SMALL_PAGES == 1
-; if SMALL_PAGES is defined it means we are using 4k pages
-; For now the first 8mb will be mapped for the kernel.
-; We reserve 8192 bytes, because we are going to fill 2 page tables
 pt_tables:
-    resb 8192
+    resb 4096*4
 fbb_pt_tables:
-    resb 8192
-%endif
-p3_table_hh: ;PDPR
-    resb 4096 
+    resb 4096*4
+vmm_area:
+    resb 4096*4
+
 ; This section will be used to get the multiboot info
 align 4096
 end_of_mapped_memory:
@@ -333,6 +324,8 @@ multiboot_acpi_info:
 stack:
     resb 16384
     .top:
+
+
 
 section .rodata
 
