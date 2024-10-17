@@ -1,10 +1,15 @@
 #include <drivers/framebuffer/framebuffer.h>
 #include <multiboot.h>
+#include <drivers/serial.h>
+#include <mem/paging.h>
 
 PSF_font *font;
 
+extern uint64_t fbb_pt_tables;
 uint32_t *framebuffer = (uint32_t *)0xffffffffbd000000;
+
 uint32_t framebuffer_buffer[800 * 600];
+// uint32_t *framebuffer_buffer = (uint32_t *)(0xffffffffbd000000 + (800 * 600 * 4));
 
 extern struct multiboot_tag_framebuffer *tagfb;
 extern char _binary_font_psf_start;
@@ -14,6 +19,10 @@ void init_framebuffer()
 {
   font = (PSF_font *)&_binary_font_psf_start;
   font_bytesPerLine = (font->width + 7) / 8;
+
+  printfs("framebuffer: %p -> %p\n", (void *)framebuffer, (void *)get_physical_address((void *)framebuffer));
+  printfs("framebuffer_buffer: %p -> %p\n", (void *)framebuffer_buffer, get_physical_address((void *)framebuffer_buffer));
+  printfs("framebuffer: %p -> %p\n", (void *)&fbb_pt_tables, get_physical_address((void *)&fbb_pt_tables));
 }
 
 void clear_framebuffer(uint8_t r, uint8_t g, uint8_t b)
