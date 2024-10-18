@@ -174,7 +174,9 @@ void setup_paging()
 
 uint64_t *get_next_table_entry(uint64_t *current_table, uint64_t index)
 {
+#ifdef DEBUG
   printfs("get netxt table [%i] %p\n", index, current_table);
+#endif
 
   if (current_table == NULL || !(current_table[index] & PT_PRESENT_BIT))
   {
@@ -193,8 +195,10 @@ uint64_t translate_virtual_address(uint64_t virtual_address)
   uint64_t pt_index = (virtual_address >> 12) & 0x1FF;
   uint64_t offset = virtual_address & 0xFFF;
 
+#ifdef DEBUG
   printfs("PML4 Index: %u, PDPT Index: %u, PD Index: %u, PT Index: %u\n",
           pml4_index, pdpt_index, pd_index, pt_index);
+#endif
 
   uint64_t *pml4_table = (uint64_t *)0x109000;
   uint64_t pdpt_address = pml4_table[pml4_index];
@@ -227,12 +231,13 @@ uint64_t translate_virtual_address(uint64_t virtual_address)
     return 0;
   }
 
-  printfs("PT Address: %p\n", (void *)pt_address);
-
   uint64_t *pt_table = (uint64_t *)(pt_address & ~0xFFF);
   uint64_t physical_address = (pt_table[pt_index] & ~0xFFF) | offset;
 
+#ifdef DEBUG
+  printfs("PT Address: %p\n", (void *)pt_address);
   printfs("Physical Address: %p\n", (void *)physical_address);
+#endif
 
   return physical_address;
 }
@@ -245,18 +250,19 @@ void *get_physical_address(uint64_t virtual_address)
   uint64_t pt_index = (virtual_address >> 12) & PT_ADDRESS_MASK;
   uint64_t offset = virtual_address & ~PT_PAGE_MASK;
 
-  printfs("get physical address from virtual address %p: \n", virtual_address);
-
   uint64_t *pml4_table = p4_table;
-  printfs("pml4: ");
   uint64_t *pdpt_table = get_next_table_entry(pml4_table, pml4_index);
-  printfs("pdpt: ");
   uint64_t *pd_table = get_next_table_entry(pdpt_table, pdpt_index);
-  printfs("pd: ");
   uint64_t *pt_table = get_next_table_entry(pd_table, pd_index);
+#ifdef DEBUG
+  printfs("get physical address from virtual address %p: \n", virtual_address);
+  printfs("pml4: ");
+  printfs("pdpt: ");
+  printfs("pd: ");
+#endif
 
-  uint64_t physical_address = (pt_table[pt_index] & ~0xFFF) | offset;
-  return (void *)physical_address;
+  return (void *)((pt_table[pt_index] & ~0xFFF) | offset);
+  ;
 }
 
 uint64_t *phys_to_virt(uint64_t phys_addr)
@@ -266,9 +272,9 @@ uint64_t *phys_to_virt(uint64_t phys_addr)
 
 void clean_new_table(uint64_t *table_to_clean)
 {
-  for (int i = 0; i < 0x200; i++)
+  for (int i = 0; i < 512; i++)
   {
-    table_to_clean[i] = 0x00l;
+    table_to_clean[i] = 0;
   }
 }
 
@@ -282,29 +288,35 @@ void map_page(uint64_t virtual_address, uint64_t physical_address, uint64_t *pml
   uint16_t pd_e = PD_ENTRY((uint64_t)virtual_address);
 
   uint64_t *pml4_table = (uint64_t *)(SIGN_EXTENSION | ENTRIES_TO_ADDRESS(510l, 510l, 510l, 510l));
-
   uint64_t *pdpr_table = (uint64_t *)(SIGN_EXTENSION | ENTRIES_TO_ADDRESS(510l, 510l, 510l, (uint64_t)pml4_e));
   uint64_t *pd_table = (uint64_t *)(SIGN_EXTENSION | ENTRIES_TO_ADDRESS(510l, 510l, (uint64_t)pml4_e, (uint64_t)pdpr_e));
 
+  printfs("Map phys to virtual:  Pml4: %u - pdpr: %u - pd: %u - flags: 0x%x to address: 0x%x\n", pml4_e, pdpr_e, pd_e, flags, virtual_address);
   uint64_t *pt_table = (uint64_t *)(SIGN_EXTENSION | ENTRIES_TO_ADDRESS(510l, (uint64_t)pml4_e, (uint64_t)pdpr_e, (uint64_t)pd_e));
   uint16_t pt_e = PT_ENTRY((uint64_t)virtual_address);
 
-  if (!(pml4_table[pml4_e] & 0b1))
+  // If the pml4_e item in the pml4 table is not present, we need to create a new one.
+  // Every entry in pml4 table points to a pdpr table
+  if (!(pml4_table[pml4_e] & PT_PRESENT_BIT))
   {
     uint64_t *new_table = allocate_physical_page();
 
     pml4_table[pml4_e] = (uint64_t)new_table | PT_RW_BIT | PT_PRESENT_BIT;
+    printfs("Need to allocate pml4 for address: 0x%x - Entry value: 0x%x - phys_address: 0x%x", (uint64_t)virtual_address, pml4_table[pml4_e], new_table);
     clean_new_table(pdpr_table);
   }
 
-    if (!(pdpr_table[pdpr_e] & 0b1))
+  if (!(pdpr_table[pdpr_e] & PT_PRESENT_BIT))
   {
     uint64_t *new_table = allocate_physical_page();
     pdpr_table[pdpr_e] = (uint64_t)new_table | PT_RW_BIT | PT_PRESENT_BIT;
+    printfs("PDPR entry value: 0x%x", pdpr_table[pdpr_e]);
     clean_new_table(pd_table);
   }
 
-  if (!(pd_table[pd_e] & 0b01))
+  // If the pd_e item in the pd table is not present, we need to create a new one.
+  // Every entry in pdpr table points to a page table if using 4k pages, or to a 2mb memory area if using 2mb pages
+  if (!(pd_table[pd_e] & PT_PRESENT_BIT))
   {
 
     uint64_t *new_table = allocate_physical_page();
@@ -312,7 +324,9 @@ void map_page(uint64_t virtual_address, uint64_t physical_address, uint64_t *pml
     clean_new_table(pt_table);
   }
 
-  if (!(pt_table[pt_e] & 0b1))
+  // This case apply only for 4kb pages, if the pt_e entry is not present in the page table we need to allocate a new 4k page
+  // Every entry in the page table is a 4kb page of physical memory
+  if (!(pt_table[pt_e] & PT_PRESENT_BIT))
   {
     pt_table[pt_e] = (uint64_t)physical_address | flags;
   }
