@@ -21,7 +21,7 @@ extern uint64_t stack;
 
 struct multiboot_tag_framebuffer *tagfb = NULL;
 struct multiboot_tag_basic_meminfo *tagmem = NULL;
-struct multiboot_tag_mmap *tagmmap = NULL;
+struct multiboot_tag_mmap *tagmmap = NULL; // This tag provides memory map.
 struct multiboot_tag_old_acpi *tagacpiold = NULL;
 struct multiboot_tag_new_acpi *tagacpinew = NULL;
 
@@ -37,76 +37,40 @@ extern uint64_t p4_table[];
 
 void init_memory()
 {
+	/* From multiboot2 doc:
+		‘mem_lower’ and ‘mem_upper’ indicate the amount of lower and upper memory, respectively, in kilobytes.
+		Lower memory starts at address 0, and upper memory starts at address 1 megabyte.
+		The maximum possible value for lower memory is 640 kilobytes.
+		The value returned for upper memory is maximally the address of the first upper memory hole minus 1 megabyte.
+		It is not guaranteed to be this value.
+	*/
 	tagmem = (struct multiboot_tag_basic_meminfo *)(multiboot_basic_meminfo + _HIGHER_HALF_KERNEL_MEM_START);
 	all_memory = tagmem->mem_lower + tagmem->mem_upper;
 
-	tagmmap = (struct multiboot_tat_mmap *)(multiboot_mmap_data + _HIGHER_HALF_KERNEL_MEM_START);
-
-	printf("Memory available: : (%u MB), (%u KB)\n", all_memory / 1024, all_memory);
-
 	// find area for bitmap and return its address. If not enough memory/error, return NULL.
 	bitmap_address = (void *)(init_bitmap(all_memory * 1024)) - _HIGHER_HALF_KERNEL_MEM_START;
+
+	/* From multiboot2 doc:
+		The map provided is guaranteed to list all standard RAM that should be available for normal use.
+		This type however includes the regions occupied by kernel, mbi, segments and modules.
+		Kernel must take care not to overwrite these regions.
+	*/
+	tagmmap = (struct multiboot_tat_mmap *)(multiboot_mmap_data + _HIGHER_HALF_KERNEL_MEM_START);
 	parse_mmap(tagmmap, all_memory * 1024);
 
-	// then find all reserved areas and mark them to bitmap
-
+	printf("Memory available: : (%u MB), (%u KB)\n", all_memory / 1024, all_memory);
 	printf("Kernel physical end: %p\n", &_kernel_physical_end);
 	printf("Bitmap address: %p\n", bitmap_address);
 	printf("end_of_mapped_memory: %p\n", &end_of_mapped_memory);
 
-	setup_paging();
+	// Initialize virtual memory manager
 	init_vmm();
-}
-
-// just placeholder
-void draw_bitmap()
-{
-
-	uint32_t bitmap_size = all_memory / (4 * 16);
-	uint8_t c = 64;
-	uint64_t test_page = 0;
-
-	if (bitmap_size > 512)
-		bitmap_size = 512;
-
-	for (int i = 0; i < 800; i++)
-	{
-		for (int x = 0; x < 16; x++)
-		{
-
-			if (is_page_free(test_page) == 0)
-				c = 255;
-			else
-				c = 0;
-
-			int y = i;
-			if (y > 580)
-				return;
-			plot_pixel(800 - 64 + x, y, c, c, c);
-			test_page++;
-		}
-	}
 }
 
 void init_video()
 {
 	tagfb = (struct multiboot_tag_framebuffer *)(multiboot_framebuffer_data + _HIGHER_HALF_KERNEL_MEM_START);
-
 	vga_resize(100, 37);
-
-	printf("framebuffer virt addr: %p\n", (uint64_t)(tagfb->common.framebuffer_addr + _HIGHER_HALF_KERNEL_MEM_START));
-	printf("framebuffer addr: %p\n", (uint64_t)(tagfb->common.framebuffer_addr));
-
-	/*
-			printf("framebuffer width: %i\n", tagfb->common.framebuffer_width);
-			printf("framebuffer height: %i\n", tagfb->common.framebuffer_height);
-			printf("framebuffer bpp: %i\n", tagfb->common.framebuffer_bpp);
-			printf("framebuffer pitch: %i\n", tagfb->common.framebuffer_pitch);
-			printf("framebuffer type: %i\n", tagfb->common.framebuffer_type);
-
-			printf("\n");
-			*/
-
 	init_framebuffer();
 }
 
@@ -158,9 +122,6 @@ int kernel_main(uint32_t addr, uint32_t magic)
 	init_serial();
 	init_idt();
 	init_vga();
-
-	// hexdump(0x5D3000, 0x5D3000 + 0x1000);
-
 	init_video();
 	init_memory();
 
@@ -168,16 +129,11 @@ int kernel_main(uint32_t addr, uint32_t magic)
 	printf("Kernel start: %p\n", &_kernel_start);
 	printf("_kern_virtual_offset: %p\n", &_kern_virtual_offset);
 
-	// hexdump(vga_get_buffer(), (vga_get_buffer() + 200));
-
 	while (1)
 	{
 		clear_framebuffer(26, 27, 38);
 		draw_text(0, 0, "PotatOS", 255, 255, 255);
-
 		draw_vga_buffer(vga_get_buffer(), 100, 37);
-		draw_bitmap();
-
 		flip_framebuffer();
 	}
 

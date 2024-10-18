@@ -41,7 +41,8 @@ int is_page_free(uint64_t page_index)
 void set_page_used(uint64_t page_index)
 {
 #ifdef DEBUG
-  printfs("page index: %u / %u\n", page_index, total_pages);
+// not sure about that
+//   printfs("page index: %u / %u\n", page_index, total_pages);
 #endif
 
   if (page_index >= total_pages)

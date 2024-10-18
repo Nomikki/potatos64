@@ -19,10 +19,19 @@ void init_framebuffer()
 {
   font = (PSF_font *)&_binary_font_psf_start;
   font_bytesPerLine = (font->width + 7) / 8;
+  printfs("Framebuffer:\n");
+  printfs("framebuffer width: %i\n", tagfb->common.framebuffer_width);
+  printfs("framebuffer height: %i\n", tagfb->common.framebuffer_height);
+  printfs("framebuffer bpp: %i\n", tagfb->common.framebuffer_bpp);
+  printfs("framebuffer pitch: %i\n", tagfb->common.framebuffer_pitch);
+  printfs("framebuffer type: %i\n", tagfb->common.framebuffer_type);
+
+  printfs("\n");
 
   printfs("framebuffer: %p -> %p\n", (void *)framebuffer, (void *)get_physical_address((void *)framebuffer));
   printfs("framebuffer_buffer: %p -> %p\n", (void *)framebuffer_buffer, get_physical_address((void *)framebuffer_buffer));
   printfs("framebuffer: %p -> %p\n", (void *)&fbb_pt_tables, get_physical_address((void *)&fbb_pt_tables));
+  printfs("\n");
 }
 
 void clear_framebuffer(uint8_t r, uint8_t g, uint8_t b)

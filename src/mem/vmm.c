@@ -92,26 +92,26 @@ uint64_t vmm_allocate(uint64_t size, uint8_t flags)
 
 void init_vmm()
 {
-  printfs("Init VMM\n");
+  printf("Init VMM\n");
 
   // make some room for linked list
   uint64_t vmm_start_physical_address = &vmm_area - &_kern_virtual_offset;
-  printfs("VMM area: %p: %p\n", &vmm_area, vmm_start_physical_address);
+  printf("VMM area: %p: %p\n", &vmm_area, vmm_start_physical_address);
 
   set_page_used(vmm_start_physical_address / 0x1000);
-
   map_page(vmm_area, vmm_start_physical_address, p4_table, PT_PRESENT_BIT | PT_RW_BIT);
 
   free_list = (vmm_region *)&vmm_area;
   free_list->base = 0xFFFFFFFFFF000000; //(uint64_t)((&end_of_mapped_memory) + (0x1000)) & ~0xFFF;
   free_list->len = 1024 * 1024 * 128;
 
-  uint64_t *ptr = 0;
-  uint64_t p = 0;
-  for (int i = 0; i < 96; i++)
+  uint64_t *ptr = NULL;
+  /*
+  for (int i = 0; i < 128; i++)
   {
     ptr = vmm_allocate(1024 * 1024, PT_PRESENT_BIT | PT_RW_BIT);
   }
+  */
 
-  printfs("vmm init ok\n");
+  printf("vmm init ok\n");
 }

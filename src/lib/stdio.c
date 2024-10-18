@@ -1,11 +1,16 @@
 #include <stdio.h>
 #include <drivers/vga.h>
+#include "config.h"
 
 int putchar(int ch)
 {
   int x, y;
   vga_get_cursor_pos(&x, &y);
   vga_write_char(ch, x, y);
+
+#ifdef DEBUG
+  printfs("%c", ch);
+#endif
   return ch;
 }
 
@@ -40,6 +45,7 @@ void putstr(const char *str)
 
 void printf(const char *format, ...)
 {
+
   va_list args;
   va_start(args, format);
 
