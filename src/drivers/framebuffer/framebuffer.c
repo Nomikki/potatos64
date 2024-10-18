@@ -2,6 +2,7 @@
 #include <multiboot.h>
 #include <drivers/serial.h>
 #include <mem/paging.h>
+#include <utils/background.h>
 
 PSF_font *font;
 
@@ -108,6 +109,28 @@ void plot_pixel(uint32_t x, uint32_t y, uint8_t r, uint8_t g, uint8_t b)
   uint32_t column = x;
 
   framebuffer_buffer[column + row] = (r << 16) | (g << 8) | b;
+}
+
+void draw_background_image()
+{
+  uint32_t x, y;
+  const char *data = header_data;
+  uint8_t pixel[3]; // 3 bytes per pixel (RGB)
+
+  for (y = 0; y < 600 / 2; y++)
+  {
+    for (x = 0; x < 800 / 2; x++)
+    {
+      HEADER_PIXEL(data, pixel); // decompile
+      if (x < 800 / 2 && y < 600 / 2)
+      {
+        plot_pixel(x * 2, y * 2, pixel[0], pixel[1], pixel[2]);
+        plot_pixel(x * 2 + 1, y * 2, pixel[0], pixel[1], pixel[2]);
+        plot_pixel(x * 2, y * 2 + 1, pixel[0], pixel[1], pixel[2]);
+        plot_pixel(x * 2 + 1, y * 2 + 1, pixel[0], pixel[1], pixel[2]);
+      }
+    }
+  }
 }
 
 void flip_framebuffer()

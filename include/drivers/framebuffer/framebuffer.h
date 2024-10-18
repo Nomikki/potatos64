@@ -31,6 +31,8 @@ extern void init_framebuffer();
 extern void draw_text(int x, int y, const char *text, uint8_t r, uint8_t g, uint8_t b);
 
 extern void clear_framebuffer(uint8_t r, uint8_t g, uint8_t b);
+extern void draw_background_image();
+
 extern void plot_pixel(uint32_t x, uint32_t y, uint8_t r, uint8_t g, uint8_t b);
 extern void flip_framebuffer();
 extern void draw_vga_buffer(uint16_t *vga_buf, int width, int height);

@@ -131,7 +131,8 @@ int kernel_main(uint32_t addr, uint32_t magic)
 
 	while (1)
 	{
-		clear_framebuffer(26, 27, 38);
+		// clear_framebuffer(26, 27, 38);
+		draw_background_image();
 		draw_text(0, 0, "PotatOS", 255, 255, 255);
 		draw_vga_buffer(vga_get_buffer(), 100, 37);
 		flip_framebuffer();
