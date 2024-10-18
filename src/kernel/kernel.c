@@ -125,9 +125,9 @@ int kernel_main(uint32_t addr, uint32_t magic)
 	init_video();
 	init_memory();
 
-	printf("location of main: %p\n", (void *)kernel_main - _HIGHER_HALF_KERNEL_MEM_START);
-	printf("Kernel start: %p\n", &_kernel_start);
-	printf("_kern_virtual_offset: %p\n", &_kern_virtual_offset);
+	// printf("location of main: %p\n", (void *)kernel_main - _HIGHER_HALF_KERNEL_MEM_START);
+	// printf("Kernel start: %p\n", &_kernel_start);
+	// printf("_kern_virtual_offset: %p\n", &_kern_virtual_offset);
 
 	while (1)
 	{

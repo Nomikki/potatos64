@@ -99,7 +99,7 @@ void init_vmm()
   printf("VMM area: %p: %p\n", &vmm_area, vmm_start_physical_address);
 
   set_page_used(vmm_start_physical_address / 0x1000);
-  map_page(vmm_area, vmm_start_physical_address, p4_table, PT_PRESENT_BIT | PT_RW_BIT);
+  map_page(&vmm_area, vmm_start_physical_address, p4_table, PT_PRESENT_BIT | PT_RW_BIT);
 
   free_list = (vmm_region *)&vmm_area;
   free_list->base = 0xFFFFFFFFFF000000; //(uint64_t)((&end_of_mapped_memory) + (0x1000)) & ~0xFFF;
@@ -113,5 +113,5 @@ void init_vmm()
   }
   */
 
-  printf("vmm init ok\n");
+  printf("VMM init OK\n");
 }

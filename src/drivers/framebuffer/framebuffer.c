@@ -108,11 +108,32 @@ void plot_pixel(uint32_t x, uint32_t y, uint8_t r, uint8_t g, uint8_t b)
   uint32_t row = y * tagfb->common.framebuffer_width;
   uint32_t column = x;
 
-  framebuffer_buffer[column + row] = (r << 16) | (g << 8) | b;
+  framebuffer_buffer[column + row] = ((r << 16) | (g << 8) | b);
 }
+
+// uint32_t background_Fade = 0;
+// int background_direction = 0;
 
 void draw_background_image()
 {
+
+  // pulse fase
+  /*
+  if (background_direction == 0)
+    background_Fade++;
+  else
+    background_Fade--;
+  if (background_Fade > 100)
+  {
+    background_Fade = 100;
+    background_direction = 1;
+  }
+  if (background_Fade <= 0)
+  {
+    background_Fade = 0;
+    background_direction = 0;
+  }
+*/
   uint32_t x, y;
   const char *data = header_data;
   uint8_t pixel[3]; // 3 bytes per pixel (RGB)
@@ -124,6 +145,12 @@ void draw_background_image()
       HEADER_PIXEL(data, pixel); // decompile
       if (x < 800 / 2 && y < 600 / 2)
       {
+        /*
+        pixel[0] = pixel[0] * (background_Fade * 0.01f);
+        pixel[1] = pixel[1] * (background_Fade * 0.01f);
+        pixel[2] = pixel[2] * (background_Fade * 0.01f);
+        */
+
         plot_pixel(x * 2, y * 2, pixel[0], pixel[1], pixel[2]);
         plot_pixel(x * 2 + 1, y * 2, pixel[0], pixel[1], pixel[2]);
         plot_pixel(x * 2, y * 2 + 1, pixel[0], pixel[1], pixel[2]);
