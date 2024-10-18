@@ -84,9 +84,9 @@ void draw_text(int cx, int cy, const char *text, uint8_t r, uint8_t g, uint8_t b
 
 void draw_vga_buffer(uint16_t *vga_buf, int width, int height)
 {
-  uint8_t r = 192;
-  uint8_t g = 192;
-  uint8_t b = 192;
+  uint8_t r = 160;
+  uint8_t g = 160;
+  uint8_t b = 160;
 
   for (int py = 0; py < height; py++)
   {
@@ -99,7 +99,7 @@ void draw_vga_buffer(uint16_t *vga_buf, int width, int height)
     {
       tempText[px] = vga_buf[px + (py * width)];
     }
-    draw_text(0, py * 16 + 16, tempText, r * 1.2, g * 1.2, b * 1.2);
+    draw_text(0, py * 16 + 16, tempText, r, g, b);
   }
 }
 
