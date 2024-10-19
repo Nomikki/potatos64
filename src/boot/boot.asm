@@ -306,8 +306,7 @@ pt_tables:
     resb 4096*4
 fbb_pt_tables:
     resb 4096*4
-vmm_area:
-    resb 4096*4
+
 
 ; This section will be used to get the multiboot info
 align 4096
@@ -324,7 +323,8 @@ multiboot_acpi_info:
 stack:
     resb 16384
     .top:
-
+vmm_area:
+    resb 4096*4
 
 
 section .rodata

@@ -38,6 +38,18 @@ int is_page_free(uint64_t page_index)
   return !(bitmap[page_index / BITS_PER_ROW] & (1 << (page_index % BITS_PER_ROW)));
 }
 
+void set_page_free(uint64_t page_index)
+{
+  if (page_index >= total_pages)
+  {
+    printfs("bitmap error! page index: %u / %u: %i %s\n", page_index, total_pages, __LINE__, __FILE__);
+    return;
+  }
+
+  int y = page_index / BITS_PER_ROW;
+  bitmap[y] &= ~(1 << (page_index % BITS_PER_ROW));
+}
+
 void set_page_used(uint64_t page_index)
 {
 #ifdef DEBUG
