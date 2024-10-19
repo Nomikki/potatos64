@@ -3,6 +3,7 @@
 
 #include <types.h>
 
+extern void init_kheap();
 extern void *kmalloc(size_t size);
 extern void kfree(void *ptr);
 

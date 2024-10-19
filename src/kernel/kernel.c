@@ -10,6 +10,7 @@
 #include <mem/mmap.h>
 #include <mem/paging.h>
 #include <mem/vmm.h>
+#include <mem/kheap.h>
 
 #define _HIGHER_HALF_KERNEL_MEM_START 0xffffffff80000000
 
@@ -65,6 +66,9 @@ void init_memory()
 
 	// Initialize virtual memory manager
 	init_vmm();
+
+	// and finally heap for the kernel <3
+	init_kheap();
 }
 
 void init_video()
