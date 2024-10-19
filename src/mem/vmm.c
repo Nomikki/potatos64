@@ -189,10 +189,8 @@ void init_vmm()
   vm_root = (vmm_region *)vmm_address;
   vm_root->size = PAGE_SIZE;
 
-  printf("vmm root: %p\n", (void *)vm_root);
-  printf("size of node: %u\n", sizeof(vmm_region));
-  printf("\n");
-
+  // printf("vmm root: %p\n", (void *)vm_root);
+  //  printf("size of node: %u\n", sizeof(vmm_region));
   // allocation_test();
-  printf("VMM init OK\n");
+  printf("VMM init OK\n\n");
 }

@@ -11,6 +11,7 @@ uint64_t total_pages = 0;
 
 uint64_t *init_bitmap(uint64_t size)
 {
+  printf("Init bitmap\n");
   size = size / 4096 / BITS_PER_ROW;
 
 #ifdef DEBUG
@@ -48,6 +49,8 @@ void set_page_free(uint64_t page_index)
 
   int y = page_index / BITS_PER_ROW;
   bitmap[y] &= ~(1 << (page_index % BITS_PER_ROW));
+
+  printf("Bitmap init OK\n\n");
 }
 
 void set_page_used(uint64_t page_index)
