@@ -107,8 +107,7 @@ cpu_status *interrupt_dispatch(cpu_status *context)
 
   if (interrupt_number >= 0 && interrupt_number < 0x20)
   {
-    // printf("vector: %x (%i)\n", context->vector_number, context->vector_number);
-    printfs("vector: %x (%i)\n", context->vector_number, context->vector_number);
+    printf("vector: %x (%i)\n", context->vector_number, context->vector_number);
 
     switch (interrupt_number)
     {
@@ -126,33 +125,32 @@ cpu_status *interrupt_dispatch(cpu_status *context)
       uint64_t faulting_address = read_cr2();
 
       printf("Error code: %b\n", context->error_code);
-      printfs("Error code: %b\n", context->error_code);
 
       switch (context->error_code)
       {
       case 0:
-        printfs("Supervisory process tried to read a non-present page entry\n");
+        printf("Supervisory process tried to read a non-present page entry\n");
         break;
       case ERR_P:
-        printfs("Supervisory process tried to read a page and caused a protection fault\n");
+        printf("Supervisory process tried to read a page and caused a protection fault\n");
         break;
       case ERR_RW:
-        printfs("Supervisory process tried to write to a non-present page entry\n");
+        printf("Supervisory process tried to write to a non-present page entry\n");
         break;
       case ERR_RW | ERR_P:
-        printfs("Supervisory process tried to write a page and caused a protection fault\n");
+        printf("Supervisory process tried to write a page and caused a protection fault\n");
         break;
       case ERR_US:
-        printfs("User process tried to read a non-present page entry\n");
+        printf("User process tried to read a non-present page entry\n");
         break;
       case ERR_US | ERR_P:
-        printfs("User process tried to read a page and caused a protection fault\n");
+        printf("User process tried to read a page and caused a protection fault\n");
         break;
       case ERR_US | ERR_RW:
-        printfs("User process tried to write to a non-present page entry\n");
+        printf("User process tried to write to a non-present page entry\n");
         break;
       case ERR_US | ERR_RW | ERR_P:
-        printfs("User process tried to write a page and caused a protection fault\n");
+        printf("User process tried to write a page and caused a protection fault\n");
 
         break;
       default:
@@ -160,7 +158,6 @@ cpu_status *interrupt_dispatch(cpu_status *context)
       }
 
       printf("\nPage fault at address: %p\n\n", faulting_address);
-      printfs("\nPage fault at address: %p\n\n", faulting_address);
 
       printf("rax: %p   ", context->rax);
       printf("rbx: %p\n", context->rbx);
