@@ -10,8 +10,10 @@ project-root/
 ├── src/
 │   ├── boot/               # Bootloader-koodi, esim. assembly-tiedostot
 │   ├── kernel/             # Kernelin pääkoodi ja korkeampi taso
+│   ├── mem/                # Muistin hallinta (bitmap, mmap, vmap, paging jne.)
 │   ├── drivers/            # Ajurit (esim. portit, sarjaportti jne.)
 │   ├── lib/                # Yhteiset kirjastot ja apufunktiot
+│   ├── utils/              # Yleiskäyttöiset funktiot
 │   └── arch/               # Arkkitehtuuri- ja alustariippuvaiset koodit
 │       └── x86_64/         # x86_64-arkkitehtuuriin liittyvät asiat
 │           ├── gdt/        # GDT:hen liittyvä koodi

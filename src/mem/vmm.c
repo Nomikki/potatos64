@@ -183,6 +183,7 @@ void init_vmm()
   // make some room for linked list
   uint64_t vmm_start_physical_address = allocate_physical_page();
   printf("VMM area: %p: %p\n", vmm_address, vmm_start_physical_address);
+
   set_page_used(vmm_start_physical_address / 0x1000);
   map_page(vmm_address, vmm_start_physical_address, p4_table, PT_PRESENT_BIT | PT_RW_BIT);
   vm_root = (vmm_region *)vmm_address;
@@ -192,8 +193,6 @@ void init_vmm()
   printf("size of node: %u\n", sizeof(vmm_region));
   printf("\n");
 
-  allocation_test();
-
-  // hexdump(0xFFFFFFFD80000000, 0xFFFFFFFD80000000 + (0x1000 * 4));
+  // allocation_test();
   printf("VMM init OK\n");
 }
