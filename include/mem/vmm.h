@@ -5,11 +5,13 @@
 #include <mem/paging.h>
 
 // linked list for virtual memory map
-typedef struct
+typedef struct __attribute__((packed))
 {
-  uint64_t base;           // start address of region
-  uint64_t len;            // size of region
+  // uint8_t reserved;        // is node reserved or not?
+  // struct vmm_region *last; // last region in list
   struct vmm_region *next; // next region in list
+  // uint64_t base;           // start address of region
+  uint64_t size; // size of region
 } vmm_region;
 
 #define VM_FLAG_NONE 0

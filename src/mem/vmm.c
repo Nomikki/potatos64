@@ -11,7 +11,9 @@ extern uint64_t _kern_virtual_offset;
 extern uint64_t end_of_mapped_memory;
 extern uint64_t vmm_area;
 
-vmm_region *free_list = NULL;
+#define ONE_GIGABYTE 0x40000000
+
+vmm_region *vm_root = NULL;
 
 uint64_t convert_x86_64_vm_flags(size_t flags)
 {
@@ -26,92 +28,172 @@ uint64_t convert_x86_64_vm_flags(size_t flags)
   return value;
 }
 
-void vmm_add_region(uint64_t start, uint64_t size)
+uint64_t align_to_nearest_page(uint64_t value)
 {
-  // vmm_region *new_region = (vmm_region *)allocate_physical_page
+  return ((value + PAGE_SIZE - 1) / PAGE_SIZE) * PAGE_SIZE;
 }
 
-void vmm_free(void *addr)
+void vmm_allocate_area(uint64_t new_virtual_address, uint64_t size, vmm_region *current, vmm_region *prev)
 {
+  for (uint64_t i = 0; i < size; i += PAGE_SIZE)
+  {
+    uint64_t physical_address = allocate_physical_page();
+    map_page(new_virtual_address + i, physical_address, p4_table, PT_PRESENT_BIT | PT_RW_BIT);
+  }
 }
 
 uint64_t vmm_allocate(uint64_t size, uint8_t flags)
 {
+  // align to nearest page
+  size = align_to_nearest_page(size + (sizeof(vmm_region)));
 
-  // align size to page boundary
-  size = align_to_page((size));
+  // printf("vmm_allocate: aligned size: %u bytes [%u KB, %u MB]: pages needed: %u\n", size, size / 1024, size / 1024 / 1024, size / PAGE_SIZE);
+  vmm_region *current = vm_root;
+  vmm_region *prev = NULL;
 
-  uint64_t starting_virtual_address = 0;
+  if (current->size == 0)
+    current->size = PAGE_SIZE;
 
-  // printf("Allocate: %i bytes (%i KB) with 0b%b flags\n", size, size / 1024, flags);
-
-  // vmm_region *prev = NULL;
-  // vmm_region *cur = (vmm_region *)free_list;
-
-  // how many pages we need?
-  // printf("Pages needed: %i\n", size / PAGE_SIZE);
-  uint64_t amount_of_pages = size / PAGE_SIZE;
-
-  for (uint64_t i = 0; i < amount_of_pages; i++)
+  while (current != NULL)
   {
+    if (current == NULL)
+      break;
 
-    uint64_t phys_addr = allocate_physical_page();
-    // printf("phys: %p, %u MB\n", (uint64_t)phys_addr, phys_addr / 1024 / 1024);
-    if (phys_addr == 0)
+    if (prev != NULL)
     {
-      // TODO:
-      // need to free reserved physical pages
-      printfs("ERR: %u, %s\n", __LINE__, __FILE__);
-      return NULL;
+      uint64_t gap_area = (uint64_t)(&current->next) - ((uint64_t)(prev) + prev->size);
+      if (gap_area >= size)
+      {
+        current = (uint64_t)(prev) + prev->size;
+        current->size = size;
+        current->next = prev->next;
+        prev->next = current;
+
+        vmm_allocate_area(current, size, current, prev);
+        current->size = size;
+        prev->next = current;
+
+        // ensure that the area is mapped
+        return current + (sizeof(vmm_region));
+      }
     }
 
-    if (starting_virtual_address == 0)
-      starting_virtual_address = free_list->base;
-
-    if (free_list->len > 0x1000)
-    {
-      uint64_t mapping_address = free_list->base;
-
-#ifdef DEBUG
-      printfs("mapping addr: %p, phys addr: %p\n", mapping_address, phys_addr);
-#endif
-
-      map_page(mapping_address, phys_addr, p4_table, flags);
-      free_list->base += 0x1000;
-      free_list->len -= 0x1000;
-    }
-    else
-    {
-      printfs("ERR: %u, %s\n", __LINE__, __FILE__);
-      return NULL;
-    }
+    prev = current;
+    current = current->next;
   }
 
-  return starting_virtual_address;
+  uint64_t new_virtual_address = (uint64_t)(prev) + prev->size;
+
+  vmm_allocate_area(new_virtual_address, size, current, prev);
+  current = new_virtual_address;
+  current->next = 0;
+  current->size = size;
+  prev->next = current;
+
+  return new_virtual_address + (sizeof(vmm_region));
+}
+
+void vmm_free(uint64_t *address)
+{
+  // printf("Free allocation from: %p\n", (uint64_t)address - (sizeof(vmm_region)));
+
+  vmm_region *current = vm_root;
+  vmm_region *prev = NULL;
+
+  uint64_t target_address = (uint64_t)address - sizeof(vmm_region);
+
+  while (current != NULL)
+  {
+    // printf("current: %p\n", current);
+    if (current == NULL)
+      break;
+
+    if (current == target_address)
+    {
+      // printf("Memory area found!\n");
+      //  unmap it!
+      prev->next = current->next;
+      uint64_t physical_address = (uint64_t *)get_physical_address(target_address);
+      // printf("Physical address: %p\n", (uint64_t)physical_address);
+      set_page_free(physical_address / PAGE_SIZE);
+      map_page(target_address, 0, p4_table, 0);
+      return;
+    }
+
+    prev = current;
+    current = current->next;
+  }
+
+  // printf("JAIKS!\n");
+}
+
+void check_allocations()
+{
+  vmm_region *current = vm_root;
+  // printf("walk:\n");
+  uint64_t steps = 0;
+  while (current != NULL)
+  {
+    if (current == NULL)
+      break;
+    printf("addr: %p, size: %u\n", current, current->size);
+    printf("   -> %p\n", current->next);
+    current = current->next;
+    steps++;
+
+    if (steps > 1024) // just give up. We failed. :F
+      break;
+  }
+  printf("Active allocations: %i\n", steps);
+}
+
+void allocation_test()
+{
+
+  printf("Allocation test: \n");
+  uint64_t ptr_array[100];
+  ptr_array[0] = vmm_allocate((1024 * 1), PT_PRESENT_BIT | PT_RW_BIT);
+  ptr_array[1] = vmm_allocate((1024 * 8), PT_PRESENT_BIT | PT_RW_BIT);
+
+  printf("original:\n");
+  check_allocations();
+
+  vmm_free(ptr_array[1]);
+
+  for (int i = 0; i < 10; i++)
+    ptr_array[i] = vmm_allocate((1024 * 1), PT_PRESENT_BIT | PT_RW_BIT);
+
+  for (int i = 0; i < 10; i++)
+    vmm_free(ptr_array[i]);
+
+  printf("after alloc/free combo:\n");
+  check_allocations();
+
+  printf("last one:\n");
+  ptr_array[0] = vmm_allocate((1024 * 8), PT_PRESENT_BIT | PT_RW_BIT);
+
+  check_allocations();
 }
 
 void init_vmm()
 {
   printf("Init VMM\n");
 
+  uint64_t vmm_address = align_to_nearest_page(&vmm_area);
   // make some room for linked list
-  uint64_t vmm_start_physical_address = &vmm_area - &_kern_virtual_offset;
-  printf("VMM area: %p: %p\n", &vmm_area, vmm_start_physical_address);
-
+  uint64_t vmm_start_physical_address = allocate_physical_page();
+  printf("VMM area: %p: %p\n", vmm_address, vmm_start_physical_address);
   set_page_used(vmm_start_physical_address / 0x1000);
-  map_page(&vmm_area, vmm_start_physical_address, p4_table, PT_PRESENT_BIT | PT_RW_BIT);
+  map_page(vmm_address, vmm_start_physical_address, p4_table, PT_PRESENT_BIT | PT_RW_BIT);
+  vm_root = (vmm_region *)vmm_address;
+  vm_root->size = PAGE_SIZE;
 
-  free_list = (vmm_region *)&vmm_area;
-  free_list->base = 0xFFFFFFFFFF000000; //(uint64_t)((&end_of_mapped_memory) + (0x1000)) & ~0xFFF;
-  free_list->len = 1024 * 1024 * 128;
+  printf("vmm root: %p\n", (void *)vm_root);
+  printf("size of node: %u\n", sizeof(vmm_region));
+  printf("\n");
 
-  uint64_t *ptr = NULL;
-  /*
-  for (int i = 0; i < 128; i++)
-  {
-    ptr = vmm_allocate(1024 * 1024, PT_PRESENT_BIT | PT_RW_BIT);
-  }
-  */
+  allocation_test();
 
+  // hexdump(0xFFFFFFFD80000000, 0xFFFFFFFD80000000 + (0x1000 * 4));
   printf("VMM init OK\n");
 }
