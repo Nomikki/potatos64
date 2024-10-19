@@ -74,49 +74,6 @@ void init_video()
 	init_framebuffer();
 }
 
-void hexdump(const void *start, const void *end)
-{
-	const uint8_t *ptr = (const uint8_t *)start;
-	const uint8_t *end_ptr = (const uint8_t *)end;
-
-	while (ptr < end_ptr)
-	{
-		printfs("%p: ", ptr);
-
-		for (int i = 0; i < 16; i++)
-		{
-			if (ptr + i < end_ptr)
-			{
-				if (ptr[i] >= 10)
-					printfs("%x ", ptr[i]);
-				else
-					printfs("0%x ", ptr[i]);
-			}
-			else
-			{
-				printfs("   ");
-			}
-		}
-
-		printfs(" | ");
-		for (int i = 0; i < 16; i++)
-		{
-			if (ptr + i < end_ptr)
-			{
-				char ch = ptr[i];
-				printfs("%c", (ch >= 32 && ch < 127) ? ch : '.');
-			}
-			else
-			{
-				printfs(" ");
-			}
-		}
-
-		printfs("\n");
-		ptr += 16;
-	}
-}
-
 int kernel_main(uint32_t addr, uint32_t magic)
 {
 	init_serial();
