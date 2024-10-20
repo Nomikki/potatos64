@@ -1,45 +1,42 @@
 
-# Tiedostohierarkia
+# File hierarchy
 
 ```
 project-root/
 ├── Makefile
-├── build/                  # Käännetyt tiedostot (objektit, binäärit jne.)
-├── iso/                    # GRUB:in ISO-tiedostot
-│   └── grub/               # GRUB:n konfiguraatio
+├── build/                  # Compiled files (object files, binaries, etc.)
+├── iso/                    # GRUB ISO files
+│   └── grub/               # GRUB configuration
 ├── src/
-│   ├── boot/               # Bootloader-koodi, esim. assembly-tiedostot
-│   ├── kernel/             # Kernelin pääkoodi ja korkeampi taso
-│   ├── mem/                # Muistin hallinta (bitmap, mmap, vmap, paging jne.)
-│   ├── drivers/            # Ajurit (esim. portit, sarjaportti jne.)
-│   ├── lib/                # Yhteiset kirjastot ja apufunktiot
-│   ├── utils/              # Yleiskäyttöiset funktiot
-│   └── arch/               # Arkkitehtuuri- ja alustariippuvaiset koodit
-│       └── x86_64/         # x86_64-arkkitehtuuriin liittyvät asiat
-│           ├── gdt/        # GDT:hen liittyvä koodi
-│           ├── idt/        # IDT ja keskeytyksiin liittyvä koodi
-│           └── paging/     # Sivutukseen liittyvä koodi
-└── docs/                   # Dokumentaatio, kuten asennus- ja käyttöohjeet
+│   ├── boot/               # Bootloader code, e.g., assembly files
+│   ├── kernel/             # Main kernel code and higher-level logic
+│   ├── mem/                # Memory management (bitmap, mmap, vmap, paging, etc.)
+│   ├── drivers/            # Drivers (e.g., ports, serial port, etc.)
+│   ├── lib/                # Shared libraries and helper functions
+│   ├── utils/              # General utility functions
+│   └── arch/               # Architecture and platform-specific code
+│       └── x86_64/         # Architecture-specific for x86_64
+│           ├── gdt/        # Code related to GDT
+│           ├── idt/        # Code related to IDT and interrupts
+│           └── paging/     # Code related to paging
+└── docs/                   # Documentation, such as installation and usage guides
 ```
 
 ## src/boot/:
-Bootloader-koodi ja kaikki assembly-tiedostot, jotka liittyvät käynnistysprosessiin, kuten GRUB
-liittyvät tiedot.
+Bootloader code and all assembly files related to the boot process, including GRUB-related configurations.
 
 ## src/kernel/:
-Kernelin keskeinen C-koodi, kuten pääfunktiot ja korkeamman tason logiikka.
-Pääosin koodi, joka käyttää tai hallitsee ajureita ja muistinhallintaa.
+The core C code of the kernel, including main functions and high-level logic. Primarily the code that manages drivers and memory management.
 
 ## src/drivers/:
-Sarjaportti, I/O-porttien hallinta, näppäimistö, hiiri jne. Voit luoda esimerkiksi tiedoston serial.c tai ports.c, jotka sisältävät sarjaporttiin ja muihin portteihin liittyvät toiminnot.
-Tämä tekee ajureiden hallinnasta selkeää ja erottaa laitteistokohtaiset asiat kernelin ydinlogiikasta.
+Handles drivers for devices like serial ports, I/O ports, keyboard, mouse, etc. For example, you can create files like `serial.c` or `ports.c`, which handle functions related to serial ports and other ports. This structure keeps hardware-specific logic separate from the kernel's core logic.
 
 ## src/lib/:
-Yleiset apufunktiot, kuten matemaattiset operaatiot, bittien käsittely tai muistinhallinnan apufunktiot, joita tarvitaan useissa paikoissa.
+General helper functions, such as mathematical operations, bit manipulation, or memory management utilities that are needed in various places.
 
 ## src/arch/x86_64/:
-Kaikki arkkitehtuuriin sidottu koodi, kuten GDT, IDT, ja sivutus (paging).
-Tämä mahdollistaa projektin tulevaisuudessa helpomman laajennettavuuden muille arkkitehtuureille
+All architecture-specific code, including GDT, IDT, and paging (memory management). This allows easier future expansion of the project to support other architectures.
 
 ## docs/:
-Dokkumentaatio kuten README.md tai koodin käyttöönottoa ja laajentamista koskevia muistiinpanoja.
+Documentation such as `README.md` or notes related to setting up or extending the code.
+
