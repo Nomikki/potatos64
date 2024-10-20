@@ -9,6 +9,12 @@ typedef struct __attribute__((packed))
   uint8_t status;
 } heap_node;
 
+typedef struct __attribute__((packed))
+{
+  uint64_t *heap_head;
+  uint64_t *heap_start;
+} heap_root;
+
 #define HEAP_ALLOCATION_USED 1
 #define HEAP_ALLOCATION_FREE 0
 
