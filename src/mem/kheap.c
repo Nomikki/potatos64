@@ -6,6 +6,23 @@
 
 heap_root *heap = NULL;
 
+void kheap_print_travel()
+{
+  printf("\n");
+  printf("travel through pointer map:\n");
+  heap_node *current_node = (heap_node *)heap->heap_start;
+  while (current_node < heap->heap_head)
+  {
+    uint64_t addr = (uint64_t)current_node; // - sizeof(heap_node);
+    printf("Allocated ptr %u: %u: %p\n", current_node->size, current_node->status, addr);
+
+    uint64_t next_offset = (uint64_t)(current_node->size + sizeof(heap_node));
+    uint64_t next_address = (uint64_t)(current_node) + next_offset;
+    current_node = next_address;
+  }
+  printf("--------------------\n");
+}
+
 void heap_tests()
 {
   printf("heap test:\n");
@@ -13,36 +30,36 @@ void heap_tests()
 
   uint64_t *ptr = NULL;
   uint64_t *ptr2 = NULL;
+  uint64_t *ptr3 = NULL;
 
   ptr = (uint64_t *)kmalloc(10);
   printf("ptr: %p\n", ptr);
 
-  ptr = (uint64_t *)kmalloc(50);
+  ptr = (uint64_t *)kmalloc(10);
   printf("ptr: %p\n", ptr);
   ptr2 = ptr;
 
-  ptr = (uint64_t *)kmalloc(10);
+  ptr = (uint64_t *)kmalloc(20);
+  ptr3 = ptr;
   printf("ptr: %p\n", ptr);
 
   ptr = (uint64_t *)kmalloc(10);
   printf("ptr: %p\n", ptr);
+
+  ptr = (uint64_t *)kmalloc(10);
+
+  kheap_print_travel();
+
+  kfree(ptr3);
+
+  kheap_print_travel();
 
   kfree(ptr2);
 
-  ptr = kmalloc(10);
-  printf("ptr: %p\n", ptr);
+  // ptr = kmalloc(10);
+  // printf("ptr: %p\n", ptr);
+  kheap_print_travel();
 
-  printf("travel through pointer map:\n");
-  heap_node *current_node = (heap_node *)heap->heap_start;
-  while (current_node < heap->heap_head)
-  {
-    uint64_t addr = (uint64_t)current_node - sizeof(heap_node);
-    printf("Allocated ptr %u: %u: %p\n", current_node->size, current_node->status, addr);
-
-    uint64_t next_offset = (uint64_t)(current_node->size + sizeof(heap_node));
-    uint64_t next_address = (uint64_t)(current_node) + next_offset;
-    current_node = next_address;
-  }
   printf("heap test end\n");
 }
 
@@ -90,7 +107,10 @@ void *kmalloc(size_t size)
 
       uint64_t return_address = (uint64_t)(current_node) + sizeof(heap_node);
 
-      split(current_node, size, leftover_size);
+      if (size_we_need < size_of_gap)
+      {
+        split(current_node, size, leftover_size);
+      }
 
       return return_address;
     }
@@ -110,27 +130,60 @@ void *kmalloc(size_t size)
   return return_address;
 }
 
+void kheap_merge(heap_node *current_node, heap_node *next, heap_node *previous)
+{
+  // merge
+  if (next != NULL)
+  {
+    if (next->status == HEAP_ALLOCATION_FREE)
+    {
+      // all free, so we can merge them together!
+      current_node->size += next->size + sizeof(heap_node);
+    }
+  }
+
+  if (previous != NULL)
+  {
+    if (previous->status == HEAP_ALLOCATION_FREE)
+    {
+      // all free, so we can merge them together!
+      previous->size += current_node->size + sizeof(heap_node);
+    }
+  }
+}
+
 void kfree(void *ptr)
 {
   uint64_t addr = (uint64_t)(ptr) - sizeof(heap_node);
   heap_node *node = (heap_node *)addr;
 #ifdef DEBUG
-  printf("Try free memory at %p: ", addr);
+  printf("Try free memory at %p: \n", addr);
 #endif
 
-  if (node->status == HEAP_ALLOCATION_USED)
+  heap_node *current_node = (heap_node *)heap->heap_start;
+  heap_node *previous = NULL;
+  heap_node *next = NULL;
+
+  while (current_node < heap->heap_head)
   {
-#ifdef DEBUG
-    printf("success!\n");
-#endif
-    node->status = HEAP_ALLOCATION_FREE;
+    next = (uint64_t)(current_node) + current_node->size + sizeof(heap_node);
+    //  check if any memory holes big enough for allocations
+    if (current_node == node && current_node->status == HEAP_ALLOCATION_USED)
+    {
+      current_node->status = HEAP_ALLOCATION_FREE;
+
+      kheap_merge(current_node, next, previous);
+      return;
+    }
+
+    uint64_t next_offset = (uint64_t)(current_node->size + sizeof(heap_node));
+    uint64_t next_address = (uint64_t)(current_node) + next_offset;
+    previous = current_node;
+    current_node = next_address;
   }
-  else
-  {
-#ifdef DEBUG
-    printf("fail\n");
-#endif
-  }
+
+  printf("KFREE ERROR! Can't free memory at %p. Node not found.\n", ptr);
+
   return;
 }
 
