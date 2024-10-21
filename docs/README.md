@@ -1,5 +1,52 @@
+# PotatOS
+A small little 64bit hobby kernel. Nothing special.
 
-# File hierarchy
+## Roadmap
+
+```
+✔️ = Done
+🛠️ = In Progress
+❌ = Not Done
+```
+
+### 1. Bootloader
+- [✔️] GRUB installed and configured
+- [✔️] Initial assembly code complete
+- [✔️] Transition to protected mode
+
+### 2. Kernel Core Architecture
+- [✔️] Kernel main code initialized
+- [✔️] GDT and IDT set up
+- [✔️] Basic interrupt handling complete
+- [🛠️] Kernel panic handling and debugging
+
+### 3. Memory Management
+- [✔️] Physical memory management (PMM)
+- [✔️] Virtual memory management (VMM)
+- [🛠️] Heap allocator development
+
+### 4. Drivers
+- [✔️] Serial port driver
+- [✔️] Keyboard driver
+- [🛠️] Framebuffer support for display
+- [❌] Mouse driver
+
+### 5. Process Management
+- [❌] Multitasking support
+- [❌] Process scheduling
+- [❌] Process creation and management
+
+### 6. System Calls
+- [❌] System call implementation (syscalls)
+- [❌] Interrupt-driven I/O
+
+## Additional Features
+- [❌] Graphics support and BMP image handling
+- [❌] Basic file system development
+- [❌] Security features
+
+
+## File hierarchy
 
 ```
 project-root/
