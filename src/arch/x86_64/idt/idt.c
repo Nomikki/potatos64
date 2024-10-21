@@ -110,6 +110,54 @@ uint64_t read_cr2()
   return cr2;
 }
 
+void printStackTrace(size_t level)
+{
+
+  StackFrame *cur_frame = __builtin_frame_address(0);
+  size_t cur_level = 0;
+  printf("Stacktrace:\n");
+  while (cur_level < level && cur_frame != NULL)
+  {
+    printf("[%i] at %p (%p)\n", cur_level, cur_frame->rip, cur_frame->rip & ~0xFFF);
+    cur_frame = cur_frame->next;
+    cur_level++;
+  }
+}
+
+void print_cpu_info(cpu_status *context)
+{
+  printf("rax: %p   ", context->rax);
+  printf("rbx: %p\n", context->rbx);
+  printf("rcx: %p   ", context->rcx);
+  printf("rdx: %p\n\n", context->rdx);
+
+  printf("rdi: %p\n", context->rdi);
+  printf("rsi: %p   ", context->rsi);
+  printf("rbp: %p\n\n", context->rbp);
+
+  printf("r8:  %p   ", context->r8);
+  printf("r9:  %p\n", context->r9);
+  printf("r10: %p   ", context->r10);
+  printf("r11: %p\n", context->r11);
+  printf("r12: %p   ", context->r12);
+  printf("r13: %p\n", context->r13);
+  printf("r14: %p   ", context->r14);
+  printf("r15: %p\n\n", context->r15);
+
+  printf("iret cs:     %p   ", context->iret_cs);
+  printf("iret rip:    %p\n", context->iret_rip);
+  printf("iret rps:    %p   ", context->iret_rsp);
+  printf("iret ss:     %p\n\n", context->iret_ss);
+  printf("iret rflags: %p\n", context->iret_rflags);
+  printf("             %B\n", context->iret_rflags);
+  printf("           64|             48|             32|             16|              0\n");
+  printf("             FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210\n");
+
+  printStackTrace(10);
+
+  print_pages();
+}
+
 cpu_status *interrupt_dispatch(cpu_status *context)
 {
 
@@ -127,6 +175,18 @@ cpu_status *interrupt_dispatch(cpu_status *context)
 
     case 13:
       printf("\nGeneral protection fault!\n");
+
+      printf("Segment error (privilege, type, limit, read/write rights).\n");
+      printf("Executing a privileged instruction while CPL != 0.\n");
+      printf("Writing a 1 in a reserved register field or writing invalid value combinations (e.g. CR0 with PE=0 and PG=1).\n");
+      printf("Referencing or accessing a null-descriptor.\n");
+      printf("Accessing a memory address with bits 48-63 not matching bit 47 (e.g. 0x_0000_8000_0000_0000 instead of 0x_ffff_8000_0000_0000) \n");
+      printf("Executing an instruction that requires memory operands to be aligned (e.g. movaps) without the proper alignment.\n");
+      printf("The saved instruction pointer points to the instruction which caused the exception.\n");
+      printf("\n");
+
+      print_cpu_info(context);
+
       break;
 
     case 14:
@@ -168,35 +228,7 @@ cpu_status *interrupt_dispatch(cpu_status *context)
       }
 
       printf("\nPage fault at address: %p\n\n", faulting_address);
-
-      printf("rax: %p   ", context->rax);
-      printf("rbx: %p\n", context->rbx);
-      printf("rcx: %p   ", context->rcx);
-      printf("rdx: %p\n\n", context->rdx);
-
-      printf("rdi: %p\n", context->rdi);
-      printf("rsi: %p   ", context->rsi);
-      printf("rbp: %p\n\n", context->rbp);
-
-      printf("r8:  %p   ", context->r8);
-      printf("r9:  %p\n", context->r9);
-      printf("r10: %p   ", context->r10);
-      printf("r11: %p\n", context->r11);
-      printf("r12: %p   ", context->r12);
-      printf("r13: %p\n", context->r13);
-      printf("r14: %p   ", context->r14);
-      printf("r15: %p\n\n", context->r15);
-
-      printf("iret cs:     %p   ", context->iret_cs);
-      printf("iret rip:    %p\n", context->iret_rip);
-      printf("iret rps:    %p   ", context->iret_rsp);
-      printf("iret ss:     %p\n\n", context->iret_ss);
-      printf("iret rflags: %p\n", context->iret_rflags);
-      printf("             %B\n", context->iret_rflags);
-      printf("           64|             48|             32|             16|              0\n");
-      printf("             FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210FEDCBA9876543210\n");
-
-      print_pages();
+      print_cpu_info(context);
 
       break;
 
@@ -205,11 +237,13 @@ cpu_status *interrupt_dispatch(cpu_status *context)
       break;
     }
 
+    __asm__("cli");
     while (1)
     {
       clear_framebuffer(128, 27, 26);
       draw_vga_buffer(vga_get_buffer(), 100, 37);
       flip_framebuffer();
+
       __asm__("hlt");
     }
   }
@@ -219,20 +253,20 @@ cpu_status *interrupt_dispatch(cpu_status *context)
 
     if (0x20 + 8 <= interrupt_number)
     {
-
       outportb(PIC_SLAVE_COMMAND, PIC_EOI);
     }
 
     if (interrupt_number == TIMER_INTERRUPT)
     {
+
       context = schelude(context);
-      //__asm__("sti");
     }
 
     if (interrupt_number == KEYBOARD_INTERRUPT)
     {
       keyboard_driver_irq_handler();
     }
+
     outportb(PIC_MASTER_COMMAND, PIC_EOI); // send EOI (end of interrupt)
   }
 

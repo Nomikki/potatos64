@@ -48,6 +48,14 @@ typedef struct __attribute__((__packed__))
   uint64_t iret_ss;
 } cpu_status;
 
+typedef struct StackFrame StackFrame;
+
+struct StackFrame
+{
+  StackFrame *next;
+  uint64_t rip;
+};
+
 #define IDT_SIZE 256
 
 #define CODE_SELECTOR 0x08
@@ -118,6 +126,8 @@ extern void interrupt_service_routine_34();
 extern void interrupt_service_routine_255();
 
 extern cpu_status *interrupt_dispatch(cpu_status *context);
+
+extern void print_cpu_info(cpu_status *context);
 
 extern void init_idt();
 extern void idt_activate();
