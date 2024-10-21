@@ -69,21 +69,29 @@ project-root/
 └── docs/                   # Documentation, such as installation and usage guides
 ```
 
-## src/boot/:
+### src/boot/:
 Bootloader code and all assembly files related to the boot process, including GRUB-related configurations.
 
-## src/kernel/:
+### src/kernel/:
 The core C code of the kernel, including main functions and high-level logic. Primarily the code that manages drivers and memory management.
 
-## src/drivers/:
+### src/drivers/:
 Handles drivers for devices like serial ports, I/O ports, keyboard, mouse, etc. For example, you can create files like `serial.c` or `ports.c`, which handle functions related to serial ports and other ports. This structure keeps hardware-specific logic separate from the kernel's core logic.
 
-## src/lib/:
+### src/lib/:
 General helper functions, such as mathematical operations, bit manipulation, or memory management utilities that are needed in various places.
 
-## src/arch/x86_64/:
+### src/arch/x86_64/:
 All architecture-specific code, including GDT, IDT, and paging (memory management). This allows easier future expansion of the project to support other architectures.
 
-## docs/:
+### docs/:
 Documentation such as `README.md` or notes related to setting up or extending the code.
 
+
+# Compiling and running
+## Cross compiler
+Before building the os, we need crosscompiler. `prepare/prepare.sh` download binutils and gcc source codes and build-essential, bison, flex, libgmp-3, libmpfr, texinfo, wget, grub-common, grub-pc-bin and xorriso and then the build cross compiler for us.
+
+Then you can use `source prepare/start.sh` or `export PATH="`pwd`/prepare/opt/cross/bin/:$PATH"` to use new cross compiler! \o/
+
+Finally, just run `make` or tweak it.
