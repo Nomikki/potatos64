@@ -11,6 +11,7 @@
 #include <mem/paging.h>
 #include <mem/vmm.h>
 #include <mem/kheap.h>
+#include <scheluding/scheluder.h>
 
 #define _HIGHER_HALF_KERNEL_MEM_START 0xffffffff80000000
 
@@ -82,9 +83,13 @@ int kernel_main(uint32_t addr, uint32_t magic)
 {
 	init_serial();
 	init_idt();
+	init_memory();
+	init_scheluder();
+
 	init_vga();
 	init_video();
-	init_memory();
+
+	idt_activate();
 
 	// printf("location of main: %p\n", (void *)kernel_main - _HIGHER_HALF_KERNEL_MEM_START);
 	// printf("Kernel start: %p\n", &_kernel_start);
@@ -97,6 +102,8 @@ int kernel_main(uint32_t addr, uint32_t magic)
 		draw_text(0, 0, "PotatOS", 255, 255, 255);
 		draw_vga_buffer(vga_get_buffer(), 100, 37);
 		flip_framebuffer();
+
+		//__asm__("hlt");
 	}
 
 	while (1)

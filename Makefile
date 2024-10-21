@@ -51,6 +51,7 @@ OBJECTS = obj/boot/boot.o \
 					obj/mem/paging.o \
 					obj/mem/vmm.o \
 					obj/mem/kheap.o \
+					obj/scheluding/scheluder.o \
 					obj/utils/hexdump.o 
 
 all: clean iso createFont run
