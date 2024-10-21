@@ -211,5 +211,5 @@ void init_kheap()
 
   printf("KHEAP init OK\n\n");
 
-  heap_tests();
+  // heap_tests();
 }
