@@ -5,10 +5,11 @@
 %macro interrupt_routine 1
 [global interrupt_service_routine_%1]
 interrupt_service_routine_%1:
-    cli
+    ; cli
     push 0 ; No error code
     push %1 ; Vector number
     save_context
+    cld 
     mov rdi, rsp
     call interrupt_dispatch
     mov rsp, rax
@@ -20,13 +21,14 @@ interrupt_service_routine_%1:
 %macro interrupt_err_routine 1
 [global interrupt_service_routine_err_%1]
 interrupt_service_routine_err_%1:
-    cli
+    ; cli
     ; push 0 ; error code
     push %1 ; Vector number
     save_context
     mov rdi, rsp
+    cld
     call interrupt_dispatch
-    mov rsp, rax
+    ; mov rsp, rax
     restore_context
     add rsp, 16
     iretq

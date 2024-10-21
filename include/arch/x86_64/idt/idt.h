@@ -76,6 +76,9 @@ typedef struct __attribute__((__packed__))
   7: lpt1
 */
 
+#define TIMER_INTERRUPT 0x20
+#define KEYBOARD_INTERRUPT 0x21
+
 #define PIC_RESET 0x11
 #define PIC_MASTER_REMAP_VECTOR 0x20
 #define PIC_SLAVE_REMAP_VECTOR 0x28
@@ -117,5 +120,7 @@ extern void interrupt_service_routine_255();
 extern cpu_status *interrupt_dispatch(cpu_status *context);
 
 extern void init_idt();
+extern void idt_activate();
+extern void idt_deactivate();
 
 #endif // ARCH_X86_64_IDT_IDT_H_

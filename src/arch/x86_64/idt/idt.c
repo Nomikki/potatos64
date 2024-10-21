@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <drivers/serial.h>
-
+#include <scheluding/scheluder.h>
 #include <drivers/keyboard.h>
 #include <drivers/framebuffer/framebuffer.h>
 
@@ -90,7 +90,17 @@ void init_idt()
   outportb(PIC_SLAVE_DATA, PIC_USE_ALL_INTERRUPTS);
 
   load_idt();
-  __asm__ volatile("sti");
+  //__asm__ volatile("sti");
+}
+
+void idt_activate()
+{
+  asm("sti");
+}
+
+void idt_deactivate()
+{
+  asm("cli");
 }
 
 uint64_t read_cr2()
@@ -207,18 +217,23 @@ cpu_status *interrupt_dispatch(cpu_status *context)
   if (interrupt_number >= 0x20)
   {
 
-    outportb(PIC_MASTER_COMMAND, PIC_EOI); // send EOI (end of interrupt)
-
     if (0x20 + 8 <= interrupt_number)
     {
 
       outportb(PIC_SLAVE_COMMAND, PIC_EOI);
     }
 
-    if (interrupt_number == 0x21)
+    if (interrupt_number == TIMER_INTERRUPT)
+    {
+      context = schelude(context);
+      //__asm__("sti");
+    }
+
+    if (interrupt_number == KEYBOARD_INTERRUPT)
     {
       keyboard_driver_irq_handler();
     }
+    outportb(PIC_MASTER_COMMAND, PIC_EOI); // send EOI (end of interrupt)
   }
 
   return context;
