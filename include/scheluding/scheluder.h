@@ -19,7 +19,7 @@ typedef struct process_t
 } process_t;
 
 extern void init_scheluder();
-extern cpu_status *schelude(cpu_status *context);
+extern cpu_status *schelude(cpu_status *cur_status);
 extern void idle_process();
 
 #endif // SCHELUDING_SCHELUDER_H_

@@ -3,146 +3,133 @@
 #include <stdio.h>
 #include <mem/kheap.h>
 
+process_t processes_list[32];
 process_t *current_process = NULL;
 
-process_t *processes_list[32];
-
-extern uint64_t stack;
+// extern uint64_t stack;
 
 void idle_process(void *argv)
 {
   while (true)
   {
-    printf(".");
-    // printf(".");dwadwa
     asm("hlt");
   }
 }
 
 void processA(void *argv)
 {
-  printf("AA %p\n", processA);
-  int k = 0;
-  int a = 0;
   while (1)
   {
-
-    k++;
-    if (k == 3200 - 20)
-    {
-      printf("A");
-      k = 0;
-      a++;
-      printf("A: %i\n", a);
-
-      asm("hlt");
-    }
+    // printf("A");
+    //    asm("hlt");
   }
 }
+
 void processB(void *argv)
 {
-  printf("BB %p\n", processB);
-  int k = 0;
   while (1)
   {
-    k++;
-    if (k == 3200)
-    {
-      printf("B");
-      asm("hlt");
-      k = 0;
-    }
+    // printf("B");
+    //    asm("hlt");
   }
 }
 void processC(void *argv)
 {
-  printf("CC %p\n", processC);
-  int k = 0;
   while (1)
   {
-    k++;
-    if (k == 3200)
-    {
-      printf("C");
-      asm("hlt");
-      k = 0;
-    }
+    // printf("C");
+    //    asm("hlt");
   }
 }
 
 int numTasks = 0;
-process_t *process = NULL;
-process_t *create_process(void (*_entry_point)(void *))
+
+uint64_t alloc_stack()
 {
+  return kmalloc(1024 * 2);
+}
+
+process_t *process = NULL;
+
+cpu_status *create_process(char *name, void (*_entry_point)(void *), void *arg)
+{
+  // process_t *new_process = kmalloc(sizeof(process_t));
+  asm("cli");
   numTasks++;
   process = (process_t *)kmalloc(sizeof(process_t));
-  process->context = (cpu_status *)kmalloc(sizeof(cpu_status));
-  void *stack_addr = kmalloc(1024 * 2);
-
-  process->context->r15 = 0;
-  process->context->r14 = 0;
-  process->context->r13 = 0;
-  process->context->r12 = 0;
-  process->context->r11 = 0;
-  process->context->r10 = 0;
-  process->context->r9 = 0;
-  process->context->r8 = 0;
-
-  process->context->rsi = 0;
-  process->context->rbp = 0;
-  process->context->rdx = 0;
-  process->context->rcx = 0;
-  process->context->rbx = 0;
-  process->context->rax = 0;
+  cpu_status *cpu = (cpu_status *)kmalloc(sizeof(cpu_status));
+  process->context = cpu;
 
   process->context->vector_number = 0;
   process->context->error_code = 0;
 
-  // process->context->iret_ss = 0;
-  // process->context-> cpuState = (CPUstate *)(stack + 4096 - sizeof(CPUstate));
-
-  process->context->iret_rip = (void *)_entry_point;
+  process->context->iret_rip = (uint64_t *)_entry_point;
+  process->context->rdi = (uint64_t *)arg;
   process->context->iret_cs = 0x8;
   process->context->iret_ss = 0x10;
   process->context->iret_rflags = 0x202;
-  process->context->iret_rsp = stack_addr;
-  process->context->rdi = (void *)_entry_point;
-  printf("created rps addr: %p\n", stack_addr);
-  printf("iret rip %x\n", process->context->iret_rip);
+  process->context->iret_rsp = alloc_stack();
+  process->context->rbp = 0;
 
-  // 0xFFFFFFFF8018C028
+  printf("process: %p\n", process);
+  printf("cpu: %p\n", cpu);
+  printf("entry ip: %p\n", process->context->iret_rip);
+  printf("iret_rsp: %p\n", process->context->iret_rsp);
 
-  printf("Process created.\n");
-  // printf("addr of stack: %p\n", &stack);
-  return process;
+  current_process = process;
+
+  printf("Process created.\n\n");
+  asm("sti");
+  return process->context;
+  // return new_process;
 }
+
 int currentTask = 0;
 void init_scheluder()
 {
-  processes_list[0] = create_process(idle_process);
-  processes_list[1] = create_process(processA);
-  processes_list[2] = create_process(processB);
-  processes_list[3] = create_process(processC);
+  for (int i = 0; i < 32; i++)
+  {
+    processes_list[i].context = NULL;
+  }
+
+  current_process = NULL;
+
+  processes_list[0].context = create_process("idle", idle_process, NULL);
+  processes_list[1].context = create_process("processA", processA, NULL);
+  processes_list[2].context = create_process("processB", processB, NULL);
+  processes_list[3].context = create_process("processC", processC, NULL);
+
+  //  asm("hlt");
 
   currentTask = 0;
-  current_process = processes_list[currentTask];
+  current_process = &processes_list[currentTask];
 }
 
-cpu_status *schelude(cpu_status *context)
+cpu_status *schelude(cpu_status *cur_status)
 {
-  __asm__("cli");
+  // printf("1");
+  if (current_process == NULL)
+    return cur_status;
 
-  current_process->context = context;
+  // printf("2");
+  current_process->context = cur_status;
 
+  // printf("3");
   currentTask++;
   if (currentTask >= numTasks)
   {
+    // printf("!!!");
     currentTask = 0;
   }
-  current_process = processes_list[currentTask];
 
-  // printf("task: %i\n", currentTask);
-  __asm__("sti");
+  // printf("4");
+  current_process = &processes_list[currentTask];
 
-  return current_process->context;
+  // printf("5");
+  if (/*processes_list[currentTask] == NULL ||*/ processes_list[currentTask].context == NULL)
+    return cur_status;
+
+  // printf("6");
+  //  return current_process->context;
+  return processes_list[currentTask].context;
 }
