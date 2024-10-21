@@ -278,6 +278,55 @@ void clean_new_table(uint64_t *table_to_clean)
   }
 }
 
+int is_virtual_memory_mapped(uint64_t virtual_address)
+{
+
+  virtual_address = align_to_page(virtual_address);
+
+  uint16_t pml4_e = PML4_ENTRY((uint64_t)virtual_address);
+  uint16_t pdpr_e = PDPR_ENTRY((uint64_t)virtual_address);
+  uint16_t pd_e = PD_ENTRY((uint64_t)virtual_address);
+
+  uint64_t *pml4_table = (uint64_t *)(SIGN_EXTENSION | ENTRIES_TO_ADDRESS(510l, 510l, 510l, 510l));
+  uint64_t *pdpr_table = (uint64_t *)(SIGN_EXTENSION | ENTRIES_TO_ADDRESS(510l, 510l, 510l, (uint64_t)pml4_e));
+  uint64_t *pd_table = (uint64_t *)(SIGN_EXTENSION | ENTRIES_TO_ADDRESS(510l, 510l, (uint64_t)pml4_e, (uint64_t)pdpr_e));
+
+  uint64_t *pt_table = (uint64_t *)(SIGN_EXTENSION | ENTRIES_TO_ADDRESS(510l, (uint64_t)pml4_e, (uint64_t)pdpr_e, (uint64_t)pd_e));
+  uint16_t pt_e = PT_ENTRY((uint64_t)virtual_address);
+
+  if (!(pml4_table[pml4_e] & PT_PRESENT_BIT))
+  {
+    return 0;
+  }
+
+  if (!(pdpr_table[pdpr_e] & PT_PRESENT_BIT))
+  {
+    return 0;
+  }
+
+  if (!(pd_table[pd_e] & PT_PRESENT_BIT))
+  {
+    return 0;
+  }
+  if (!(pt_table[pt_e] & PT_PRESENT_BIT))
+  {
+    return 0;
+  }
+
+  return 1;
+}
+
+void map_if_not_mapped(uint64_t address)
+{
+  address = align_to_nearest_page(address);
+  if (is_virtual_memory_mapped(address) == 0)
+  {
+    printf("HALP!!!\n");
+    uint64_t paddr = allocate_physical_page();
+    map_page(address, paddr, p4_table, PT_PRESENT_BIT | PT_RW_BIT);
+  }
+}
+
 void map_page(uint64_t virtual_address, uint64_t physical_address, uint64_t *pml4_tassssble, uint8_t flags)
 {
   virtual_address = align_to_page(virtual_address);

@@ -56,6 +56,12 @@ void heap_tests()
 
   kfree(ptr2);
 
+  for (int i = 0; i < 1024; i++)
+  {
+    ptr = (uint64_t *)kmalloc(1024 * 4);
+    printf("ptr: %p\n", ptr);
+  }
+
   // ptr = kmalloc(10);
   // printf("ptr: %p\n", ptr);
   kheap_print_travel();
@@ -112,12 +118,17 @@ void *kmalloc(size_t size)
         split(current_node, size, leftover_size);
       }
 
+      map_if_not_mapped(return_address);
+
       return return_address;
     }
 
     uint64_t next_offset = (uint64_t)(current_node->size + sizeof(heap_node));
     // printf("Offset: %u\n", next_offset);
     uint64_t next_address = (uint64_t)(current_node) + next_offset;
+
+    map_if_not_mapped(next_address);
+
     current_node = next_address;
   }
 
@@ -127,6 +138,9 @@ void *kmalloc(size_t size)
   uint64_t return_address = (uint64_t)(current_node) + sizeof(heap_node);
 
   heap->heap_head = return_address;
+
+  map_if_not_mapped(return_address);
+
   return return_address;
 }
 
