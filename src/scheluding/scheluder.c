@@ -23,6 +23,7 @@ void processA(void *argv)
 {
   printf("AA %p\n", processA);
   int k = 0;
+  int a = 0;
   while (1)
   {
 
@@ -30,13 +31,11 @@ void processA(void *argv)
     if (k == 3200 - 20)
     {
       printf("A");
-      asm("hlt");
       k = 0;
+      a++;
+      printf("A: %i\n", a);
 
-      /*
-      uint64_t *ptr = kmalloc(10);
-      kfree(ptr);
-      */
+      asm("hlt");
     }
   }
 }

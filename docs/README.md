@@ -32,8 +32,8 @@ A small little 64bit hobby kernel. Nothing special.
 - [❌] Mouse driver
 
 ### 5. Process Management
-- [❌] Multitasking support
-- [❌] Process scheduling
+- [🛠️] Multitasking support
+- [🛠️ ] Process scheduling
 - [❌] Process creation and management
 
 ### 6. System Calls
