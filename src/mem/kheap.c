@@ -205,7 +205,7 @@ void init_kheap()
 {
   printf("Init KHEAP\n");
   // allocate some space for heap
-  heap = vmm_allocate((1024 * 8), PT_PRESENT_BIT | PT_RW_BIT);
+  heap = vmm_allocate((1024 * 100), VM_FLAG_EXEC | VM_FLAG_WRITE);
   heap->heap_head = heap + sizeof(heap_node);
   heap->heap_start = heap->heap_head;
 

@@ -251,6 +251,11 @@ cpu_status *interrupt_dispatch(cpu_status *context)
   if (interrupt_number >= 0x20)
   {
 
+    if (interrupt_number == KEYBOARD_INTERRUPT)
+    {
+      keyboard_driver_irq_handler();
+    }
+
     if (0x20 + 8 <= interrupt_number)
     {
       outportb(PIC_SLAVE_COMMAND, PIC_EOI);
@@ -258,13 +263,9 @@ cpu_status *interrupt_dispatch(cpu_status *context)
 
     if (interrupt_number == TIMER_INTERRUPT)
     {
-
+      asm("cli");
       context = schelude(context);
-    }
-
-    if (interrupt_number == KEYBOARD_INTERRUPT)
-    {
-      keyboard_driver_irq_handler();
+      asm("sti");
     }
 
     outportb(PIC_MASTER_COMMAND, PIC_EOI); // send EOI (end of interrupt)
