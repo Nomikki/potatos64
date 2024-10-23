@@ -23,27 +23,44 @@ void idle_process(void *argv)
 
 void processA(void *argv)
 {
-  while (1)
+  int a = 0;
+  while (true)
   {
-    // printf("A");
-    //    asm("hlt");
+    a++;
+    if (a > 32000)
+    {
+      a = 0;
+    }
+    asm("hlt");
   }
 }
 
 void processB(void *argv)
 {
-  while (1)
+  int a = 0;
+  while (true)
   {
-    // printf("B");
-    //    asm("hlt");
+
+    a++;
+    if (a > 32000)
+    {
+      a = 0;
+    }
+    asm("hlt");
   }
 }
 void processC(void *argv)
 {
-  while (1)
+  int a = 0;
+  while (true)
   {
-    // printf("C");
-    //    asm("hlt");
+
+    a++;
+    if (a > 32000)
+    {
+      a = 0;
+    }
+    asm("hlt");
   }
 }
 

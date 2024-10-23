@@ -19,9 +19,6 @@ extern uint64_t _kern_virtual_offset;
 
 void init_pmm()
 {
-  // find area for bitmap and return its address. If not enough memory/error, return NULL.
-  uint64_t *bitmap_address = (void *)(init_bitmap(all_memory * 1024)) - (uint64_t)(&_kern_virtual_offset);
-  printf("Bitmap address: %p\n", bitmap_address);
 
   /* From multiboot2 doc:
       ‘mem_lower’ and ‘mem_upper’ indicate the amount of lower and upper memory, respectively, in kilobytes.
@@ -32,6 +29,10 @@ void init_pmm()
     */
   tagmem = (struct multiboot_tag_basic_meminfo *)(multiboot_basic_meminfo + (uint64_t)(&_kern_virtual_offset));
   all_memory = tagmem->mem_lower + tagmem->mem_upper;
+
+  // find area for bitmap and return its address. If not enough memory/error, return NULL.
+  uint64_t *bitmap_address = (void *)(init_bitmap(all_memory * 1024)) - (uint64_t)(&_kern_virtual_offset);
+  printf("Bitmap address: %p\n", bitmap_address);
 
   /* From multiboot2 doc:
     The map provided is guaranteed to list all standard RAM that should be available for normal use.
