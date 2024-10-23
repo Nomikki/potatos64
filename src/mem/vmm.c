@@ -44,6 +44,8 @@ void vmm_allocate_area(uint64_t new_virtual_address, uint64_t size, vmm_region *
 
 uint64_t vmm_allocate(uint64_t size, uint8_t flags)
 {
+  flags = convert_x86_64_vm_flags(flags);
+
   // align to nearest page
   size = align_to_nearest_page(size + (sizeof(vmm_region)));
 
@@ -152,8 +154,8 @@ void allocation_test()
 
   printf("Allocation test: \n");
   uint64_t ptr_array[100];
-  ptr_array[0] = vmm_allocate((1024 * 1), PT_PRESENT_BIT | PT_RW_BIT);
-  ptr_array[1] = vmm_allocate((1024 * 8), PT_PRESENT_BIT | PT_RW_BIT);
+  ptr_array[0] = vmm_allocate((1024 * 1), VM_FLAG_EXEC | VM_FLAG_WRITE);
+  ptr_array[1] = vmm_allocate((1024 * 8), VM_FLAG_EXEC | VM_FLAG_WRITE);
 
   printf("original:\n");
   check_allocations();
@@ -161,7 +163,7 @@ void allocation_test()
   vmm_free(ptr_array[1]);
 
   for (int i = 0; i < 10; i++)
-    ptr_array[i] = vmm_allocate((1024 * 1), PT_PRESENT_BIT | PT_RW_BIT);
+    ptr_array[i] = vmm_allocate((1024 * 1), VM_FLAG_EXEC | VM_FLAG_WRITE);
 
   for (int i = 0; i < 10; i++)
     vmm_free(ptr_array[i]);
@@ -170,7 +172,7 @@ void allocation_test()
   check_allocations();
 
   printf("last one:\n");
-  ptr_array[0] = vmm_allocate((1024 * 8), PT_PRESENT_BIT | PT_RW_BIT);
+  ptr_array[0] = vmm_allocate((1024 * 8), VM_FLAG_EXEC | VM_FLAG_WRITE);
 
   check_allocations();
 }
@@ -192,5 +194,10 @@ void init_vmm()
   // printf("vmm root: %p\n", (void *)vm_root);
   //  printf("size of node: %u\n", sizeof(vmm_region));
   // allocation_test();
+
+  // and finally heap for the kernel <3
+  init_kheap();
+  printf("end_of_mapped_memory: %p\n", &end_of_mapped_memory);
+
   printf("VMM init OK\n\n");
 }

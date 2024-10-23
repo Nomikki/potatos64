@@ -237,7 +237,7 @@ cpu_status *interrupt_dispatch(cpu_status *context)
       break;
     }
 
-    __asm__("cli");
+    idt_deactivate();
     while (1)
     {
       clear_framebuffer(128, 27, 26);
@@ -263,9 +263,9 @@ cpu_status *interrupt_dispatch(cpu_status *context)
 
     if (interrupt_number == TIMER_INTERRUPT)
     {
-      asm("cli");
+      idt_deactivate();
       context = schelude(context);
-      asm("sti");
+      idt_activate();
     }
 
     outportb(PIC_MASTER_COMMAND, PIC_EOI); // send EOI (end of interrupt)

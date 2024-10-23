@@ -3,7 +3,6 @@
 
 int init_serial()
 {
-
   outportb(PORT_COM1 + INTERRUPT_REGISTER, DISABLE_INTERRUPTS);                                                           // Disable interrupts
   outportb(PORT_COM1 + LINE_CONTROL_REGISTER, ENABLE_DLAB);                                                               // Enable DLAB (set baud rate divisor)
   outportb(PORT_COM1 + BAUDRATE_LEAST_SIGNIFANT, 0x03);                                                                   // Set divisor to 3 (low byte) 38400 baud

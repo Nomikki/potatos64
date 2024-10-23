@@ -1,3 +1,8 @@
+/*
+  TODO:
+  allocate memory for processes_list
+
+ */
 #include <scheluding/scheluder.h>
 #include "config.h"
 #include <stdio.h>
@@ -87,6 +92,7 @@ cpu_status *create_process(char *name, void (*_entry_point)(void *), void *arg)
 int currentTask = 0;
 void init_scheluder()
 {
+  // only 32 processes, hard coded now :[
   for (int i = 0; i < 32; i++)
   {
     processes_list[i].context = NULL;
@@ -94,12 +100,12 @@ void init_scheluder()
 
   current_process = NULL;
 
+  idt_deactivate();
   processes_list[0].context = create_process("idle", idle_process, NULL);
   processes_list[1].context = create_process("processA", processA, NULL);
   processes_list[2].context = create_process("processB", processB, NULL);
   processes_list[3].context = create_process("processC", processC, NULL);
-
-  //  asm("hlt");
+  idt_activate();
 
   currentTask = 0;
   current_process = &processes_list[currentTask];
