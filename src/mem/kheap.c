@@ -149,7 +149,6 @@ void *kmalloc(size_t size)
       }
 
       map_if_not_mapped(return_address);
-      printf("U");
 
       // map range?
       range_map(current_node, return_address);
@@ -158,11 +157,9 @@ void *kmalloc(size_t size)
     }
 
     uint64_t next_offset = (uint64_t)(current_node->size + sizeof(heap_node));
-    // printf("Offset: %u\n", next_offset);
     uint64_t next_address = (uint64_t)(current_node) + next_offset;
 
     map_if_not_mapped(next_address);
-    printf("I");
 
     current_node = next_address;
   }
@@ -175,7 +172,6 @@ void *kmalloc(size_t size)
   heap->heap_head = return_address;
 
   map_if_not_mapped(return_address);
-  printf("O");
   range_map(current_node, return_address);
 
   return return_address;

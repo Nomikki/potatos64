@@ -159,7 +159,10 @@ void init_scheluder()
 {
   printf("Init scheluder\n");
   idt_deactivate();
+#ifdef DEBUG
   kheap_print_travel();
+#endif
+
   for (int i = 0; i < PROCESS_MAX; i++)
   {
     snapshots[i].context = NULL;
@@ -180,9 +183,10 @@ void init_scheluder()
   currentTask = 0;
   current_process = &snapshots[currentTask];
 
+#ifdef DEBUG
   kheap_print_travel();
-
   print_tasks();
+#endif
 
   printf("Scheluder init ok\n");
   currentTask = 0;
@@ -201,8 +205,6 @@ cpu_status *schelude(cpu_status *cur_status)
 
   currentTask++;
   currentTask %= (numTasks);
-
-  // print_task(currentTask);
 
   current_process = &snapshots[currentTask];
   current_process->process_status = RUNNING;

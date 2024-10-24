@@ -1,6 +1,7 @@
 #include <mem/paging.h>
 #include <stdio.h>
 #include <drivers/serial.h>
+#include "config.h"
 
 extern uint64_t p4_table[]; // PML4
 extern uint64_t p3_table[]; // PDPR
@@ -175,7 +176,9 @@ void setup_paging()
 uint64_t *get_next_table_entry(uint64_t *current_table, uint64_t index)
 {
 #ifdef DEBUG
+#ifdef VERBOSE
   printfs("get netxt table [%i] %p\n", index, current_table);
+#endif
 #endif
 
   if (current_table == NULL || !(current_table[index] & PT_PRESENT_BIT))
@@ -343,7 +346,12 @@ void map_page(uint64_t virtual_address, uint64_t physical_address, uint64_t *pml
   uint64_t *pdpr_table = (uint64_t *)(SIGN_EXTENSION | ENTRIES_TO_ADDRESS(510l, 510l, 510l, (uint64_t)pml4_e));
   uint64_t *pd_table = (uint64_t *)(SIGN_EXTENSION | ENTRIES_TO_ADDRESS(510l, 510l, (uint64_t)pml4_e, (uint64_t)pdpr_e));
 
+#ifdef DEBUG
+#ifdef VERBOSE
   printfs("Map phys to virtual:  Pml4: %u - pdpr: %u - pd: %u - flags: 0x%x to address: 0x%x\n", pml4_e, pdpr_e, pd_e, flags, virtual_address);
+#endif
+#endif
+
   uint64_t *pt_table = (uint64_t *)(SIGN_EXTENSION | ENTRIES_TO_ADDRESS(510l, (uint64_t)pml4_e, (uint64_t)pdpr_e, (uint64_t)pd_e));
   uint16_t pt_e = PT_ENTRY((uint64_t)virtual_address);
 
@@ -354,7 +362,9 @@ void map_page(uint64_t virtual_address, uint64_t physical_address, uint64_t *pml
     uint64_t *new_table = allocate_physical_page();
 
     pml4_table[pml4_e] = (uint64_t)new_table | PT_RW_BIT | PT_PRESENT_BIT;
-    printfs("Need to allocate pml4 for address: 0x%x - Entry value: 0x%x - phys_address: 0x%x", (uint64_t)virtual_address, pml4_table[pml4_e], new_table);
+#ifdef DEBUG
+    printfs("Need to allocate pml4 for address: 0x%x - Entry value: 0x%x - phys_address: 0x%x\n", (uint64_t)virtual_address, pml4_table[pml4_e], new_table);
+#endif
     clean_new_table(pdpr_table);
   }
 
@@ -362,7 +372,9 @@ void map_page(uint64_t virtual_address, uint64_t physical_address, uint64_t *pml
   {
     uint64_t *new_table = allocate_physical_page();
     pdpr_table[pdpr_e] = (uint64_t)new_table | PT_RW_BIT | PT_PRESENT_BIT;
-    printfs("PDPR entry value: 0x%x", pdpr_table[pdpr_e]);
+#ifdef DEBUG
+    printfs("PDPR entry value: 0x%x\n", pdpr_table[pdpr_e]);
+#endif
     clean_new_table(pd_table);
   }
 
@@ -373,6 +385,10 @@ void map_page(uint64_t virtual_address, uint64_t physical_address, uint64_t *pml
 
     uint64_t *new_table = allocate_physical_page();
     pd_table[pd_e] = (uint64_t)new_table | PT_RW_BIT | PT_PRESENT_BIT;
+#ifdef DEBUG
+    printfs("PD entry value: 0x%x\n", pd_table[pd_e]);
+#endif
+
     clean_new_table(pt_table);
   }
 
@@ -380,7 +396,23 @@ void map_page(uint64_t virtual_address, uint64_t physical_address, uint64_t *pml
   // Every entry in the page table is a 4kb page of physical memory
   if (!(pt_table[pt_e] & PT_PRESENT_BIT))
   {
+    uint64_t old_value = pt_table[pt_e];
+
+#ifdef DEBUG
+#ifdef VERBOSE
+    if (old_value != 0)
+      printfs("PT entry value: 0x%x\n", pt_table[pt_e]);
+#endif
+#endif
     pt_table[pt_e] = (uint64_t)physical_address | flags;
+
+#ifdef DEBUG
+#ifdef VERBOSE
+    uint64_t new_value = pt_table[pt_e] & ~flags;
+    if (old_value != new_value)
+      printfs("remapped physical address: 0x%x to 0x%x\n", old_value, new_value);
+#endif
+#endif
   }
 
   return;

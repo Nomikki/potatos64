@@ -99,7 +99,9 @@ uint64_t allocate_physical_page()
   }
 
 #ifdef DEBUG
+#ifdef VERBOSE
   printfs("allocate: %p (%i MB)\n", return_addr, return_addr / 1024 / 1024);
+#endif
 #endif
   return return_addr;
 }
