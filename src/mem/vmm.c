@@ -42,6 +42,10 @@ void vmm_allocate_area(uint64_t new_virtual_address, uint64_t size, vmm_region *
   }
 }
 
+// TODO:
+/*
+  Check if there is any overlaps
+*/
 uint64_t vmm_allocate(uint64_t size, uint8_t flags)
 {
   flags = convert_x86_64_vm_flags(flags);
