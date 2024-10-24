@@ -39,41 +39,20 @@ void init_video()
 int kernel_main(uint32_t addr, uint32_t magic)
 {
 	init_serial();
-	init_idt();
-	init_memory();
 	init_vga();
 	init_video();
+	init_idt();
+	init_memory();
+
 	init_scheluder();
 
 	idt_activate();
-
-	char buffer[64] = {0};
 
 	while (1)
 	{
 		draw_background_image();
 		draw_text(0, 0, "PotatOS", 255, 255, 255);
 		draw_vga_buffer(vga_get_buffer(), 100, 37);
-
-		for (int i = 0; i < 3; i++)
-		{
-			int cx = 256 + (i * 18 * 12);
-			itoa64(processes_list[i].context->iret_rip, buffer, 16);
-			draw_text(cx, 0, buffer, 255, 255, 255);
-
-			itoa64(processes_list[i].context->iret_rflags, buffer, 16);
-			draw_text(cx, 12, buffer, 255, 255, 255);
-
-			itoa64(processes_list[i].context->rax, buffer, 16);
-			draw_text(cx, 12 * 2, buffer, 255, 255, 255);
-
-			itoa64(processes_list[i].context->rdi, buffer, 16);
-			draw_text(cx, 12 * 3, buffer, 255, 255, 255);
-
-			itoa64(processes_list[i].context->iret_rsp, buffer, 16);
-			draw_text(cx, 12 * 4, buffer, 255, 255, 255);
-		}
-
 		flip_framebuffer();
 
 		__asm__("hlt");

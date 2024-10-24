@@ -22,4 +22,7 @@ extern void init_kheap();
 extern void *kmalloc(size_t size);
 extern void kfree(void *ptr);
 
+// just test function
+extern void kheap_print_travel();
+
 #endif // MEM_KHEAP_H_

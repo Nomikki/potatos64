@@ -9,8 +9,8 @@ interrupt_service_routine_%1:
     push 0 ; No error code
     push %1 ; Vector number
     save_context
-    cld 
     mov rdi, rsp
+    ; cld 
     call interrupt_dispatch
     mov rsp, rax
     restore_context
@@ -26,7 +26,7 @@ interrupt_service_routine_err_%1:
     push %1 ; Vector number
     save_context
     mov rdi, rsp
-    cld
+    ; cld
     call interrupt_dispatch
     mov rsp, rax
     restore_context
@@ -40,9 +40,11 @@ interrupt_service_routine_err_%1:
     push rbx
     push rcx
     push rdx
+
     push rbp
     push rsi
     push rdi
+
     push r8
     push r9
     push r10
@@ -62,9 +64,11 @@ interrupt_service_routine_err_%1:
     pop r10
     pop r9
     pop r8
+
     pop rdi
     pop rsi
     pop rbp
+
     pop rdx
     pop rcx
     pop rbx

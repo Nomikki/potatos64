@@ -13,9 +13,10 @@ typedef enum
 
 typedef struct process_t
 {
+  char name[32];
   status_t process_status;
   cpu_status *context;
-  struct process_t *next;
+  // struct process_t *next;
 } process_t;
 
 extern void init_scheluder();

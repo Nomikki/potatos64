@@ -20,7 +20,7 @@ typedef struct __attribute__((packed))
   uint64_t base;
 } idtr;
 
-typedef struct __attribute__((__packed__))
+typedef struct
 {
   uint64_t r15;
   uint64_t r14;
@@ -46,7 +46,7 @@ typedef struct __attribute__((__packed__))
   uint64_t iret_rflags;
   uint64_t iret_rsp;
   uint64_t iret_ss;
-} cpu_status;
+} __attribute__((__packed__)) cpu_status;
 
 typedef struct StackFrame StackFrame;
 

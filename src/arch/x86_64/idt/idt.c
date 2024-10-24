@@ -126,6 +126,7 @@ void printStackTrace(size_t level)
 
 void print_cpu_info(cpu_status *context)
 {
+
   printf("rax: %p   ", context->rax);
   printf("rbx: %p\n", context->rbx);
   printf("rcx: %p   ", context->rcx);
@@ -145,8 +146,8 @@ void print_cpu_info(cpu_status *context)
   printf("r15: %p\n\n", context->r15);
 
   printf("iret cs:     %p   ", context->iret_cs);
-  printf("iret rip:    %p\n", context->iret_rip);
-  printf("iret rps:    %p   ", context->iret_rsp);
+  printf("iret rip:    %p (%p)\n", context->iret_rip, context->iret_rip & ~0xFFF);
+  printf("iret rsp:    %p (%p)  ", context->iret_rip, context->iret_rip & ~0xFFF);
   printf("iret ss:     %p\n\n", context->iret_ss);
   printf("iret rflags: %p\n", context->iret_rflags);
   printf("             %B\n", context->iret_rflags);
@@ -155,7 +156,22 @@ void print_cpu_info(cpu_status *context)
 
   printStackTrace(10);
 
+  kheap_print_travel();
+
   print_pages();
+}
+
+void halt()
+{
+  idt_deactivate();
+  while (1)
+  {
+    clear_framebuffer(128, 27, 26);
+    draw_vga_buffer(vga_get_buffer(), 100, 37);
+    flip_framebuffer();
+
+    __asm__("hlt");
+  }
 }
 
 cpu_status *interrupt_dispatch(cpu_status *context)
@@ -186,7 +202,7 @@ cpu_status *interrupt_dispatch(cpu_status *context)
       printf("\n");
 
       print_cpu_info(context);
-
+      halt();
       break;
 
     case 14:
@@ -229,7 +245,7 @@ cpu_status *interrupt_dispatch(cpu_status *context)
 
       printf("\nPage fault at address: %p\n\n", faulting_address);
       print_cpu_info(context);
-
+      halt();
       break;
 
     default:
@@ -237,15 +253,7 @@ cpu_status *interrupt_dispatch(cpu_status *context)
       break;
     }
 
-    idt_deactivate();
-    while (1)
-    {
-      clear_framebuffer(128, 27, 26);
-      draw_vga_buffer(vga_get_buffer(), 100, 37);
-      flip_framebuffer();
-
-      __asm__("hlt");
-    }
+    halt();
   }
 
   if (interrupt_number >= 0x20)
@@ -263,9 +271,9 @@ cpu_status *interrupt_dispatch(cpu_status *context)
 
     if (interrupt_number == TIMER_INTERRUPT)
     {
-      idt_deactivate();
+      // idt_deactivate();
       context = schelude(context);
-      idt_activate();
+      // idt_activate();
     }
 
     outportb(PIC_MASTER_COMMAND, PIC_EOI); // send EOI (end of interrupt)

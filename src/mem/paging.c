@@ -78,7 +78,7 @@ void print_pagedir(uint64_t *pagedir, const char *name, uint32_t start, uint32_t
   printfs("\n");
 }
 
-uint64_t is_physical_memory_mapped(uint64_t physical_address, uint64_t *pml4_table)
+int is_physical_memory_mapped(uint64_t physical_address, uint64_t *pml4_table)
 {
   uint64_t pml4_index = (physical_address >> 39) & PT_ADDRESS_MASK;
   uint64_t pdpt_index = (physical_address >> 30) & PT_ADDRESS_MASK;
@@ -88,36 +88,36 @@ uint64_t is_physical_memory_mapped(uint64_t physical_address, uint64_t *pml4_tab
   uint64_t pdpt_entry = pml4_table[pml4_index];
   if (!(pdpt_entry & PT_PRESENT_BIT))
   {
-    return 0;
+    return PT_NOT_MAPPED;
   }
 
   uint64_t *pdpt_table = (uint64_t *)(pdpt_entry & PT_PAGE_MASK);
   uint64_t pd_entry = pdpt_table[pdpt_index];
   if (!(pd_entry & PT_PRESENT_BIT))
   {
-    return 0;
+    return PT_NOT_MAPPED;
   }
 
   uint64_t *pd_table = (uint64_t *)(pd_entry & PT_PAGE_MASK);
   uint64_t pt_entry = pd_table[pd_index];
   if (!(pt_entry & PT_PRESENT_BIT))
   {
-    return 0;
+    return PT_NOT_MAPPED;
   }
 
   uint64_t *pt_table = (uint64_t *)(pt_entry & PT_PAGE_MASK);
   uint64_t page_entry = pt_table[pt_index];
   if (!(page_entry & 1))
   {
-    return 0;
+    return PT_NOT_MAPPED;
   }
 
   if ((page_entry & PT_PAGE_MASK) == (physical_address & PT_PAGE_MASK))
   {
-    return 1;
+    return PT_IS_MAPPED;
   }
 
-  return 0;
+  return PT_NOT_MAPPED;
 }
 
 void print_pages()
@@ -280,7 +280,6 @@ void clean_new_table(uint64_t *table_to_clean)
 
 int is_virtual_memory_mapped(uint64_t virtual_address)
 {
-
   virtual_address = align_to_page(virtual_address);
 
   uint16_t pml4_e = PML4_ENTRY((uint64_t)virtual_address);
@@ -296,35 +295,39 @@ int is_virtual_memory_mapped(uint64_t virtual_address)
 
   if (!(pml4_table[pml4_e] & PT_PRESENT_BIT))
   {
-    return 0;
+    return PT_NOT_MAPPED;
   }
 
   if (!(pdpr_table[pdpr_e] & PT_PRESENT_BIT))
   {
-    return 0;
+    return PT_NOT_MAPPED;
   }
 
   if (!(pd_table[pd_e] & PT_PRESENT_BIT))
   {
-    return 0;
+    return PT_NOT_MAPPED;
   }
   if (!(pt_table[pt_e] & PT_PRESENT_BIT))
   {
-    return 0;
+    return PT_NOT_MAPPED;
   }
 
-  return 1;
+  return PT_IS_MAPPED;
 }
 
-void map_if_not_mapped(uint64_t address)
+int map_if_not_mapped(uint64_t address)
 {
-  address = align_to_nearest_page(address);
-  if (is_virtual_memory_mapped(address) == 0)
+  // address = align_to_nearest_page(address);
+  // address = align_to_page(address);
+  if (is_virtual_memory_mapped(address) == PT_NOT_MAPPED)
   {
-    printf("HALP!!!\n");
+    printf("HALP!!! Map virtual: %p [%p]\n", address, address & ~0xfff);
     uint64_t paddr = allocate_physical_page();
     map_page(address, paddr, p4_table, PT_PRESENT_BIT | PT_RW_BIT);
+    return 1;
   }
+
+  return 0;
 }
 
 void map_page(uint64_t virtual_address, uint64_t physical_address, uint64_t *pml4_tassssble, uint8_t flags)

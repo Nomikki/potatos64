@@ -181,7 +181,7 @@ void init_vmm()
 {
   printf("Init VMM\n");
 
-  uint64_t vmm_address = align_to_nearest_page(&vmm_area);
+  uint64_t vmm_address = align_to_nearest_page((&vmm_area) + ONE_GIGABYTE);
   // make some room for linked list
   uint64_t vmm_start_physical_address = allocate_physical_page();
   printf("VMM area: %p: %p\n", vmm_address, vmm_start_physical_address);

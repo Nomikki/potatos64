@@ -9,15 +9,16 @@ heap_root *heap = NULL;
 void kheap_print_travel()
 {
   printf("\n");
-  printf("travel through pointer map:\n");
+  printf("kheap map travel!\n");
   heap_node *current_node = (heap_node *)heap->heap_start;
   while (current_node < heap->heap_head)
   {
     uint64_t addr = (uint64_t)current_node; // - sizeof(heap_node);
-    printf("Allocated ptr %u: %u: %p\n", current_node->size, current_node->status, addr);
-
     uint64_t next_offset = (uint64_t)(current_node->size + sizeof(heap_node));
     uint64_t next_address = (uint64_t)(current_node) + next_offset;
+
+    printf("Allocated ptr %u: %s: %p -> next: %p\n", current_node->size, current_node->status == HEAP_ALLOCATION_USED ? "USED" : "FREE", addr, next_address);
+
     current_node = next_address;
   }
   printf("--------------------\n");
@@ -84,13 +85,42 @@ void split(uint64_t starting_address, uint64_t size, uint64_t leftover)
   B->status = HEAP_ALLOCATION_FREE;
 }
 
+void range_map(uint64_t start_address, uint64_t end_address)
+{
+  start_address = align_to_page(start_address);
+  end_address = align_to_page(end_address);
+
+  for (uint64_t i = start_address; i < end_address; i += 0x1000)
+  {
+    map_if_not_mapped(i);
+    printf("P");
+  }
+}
+
 void *kmalloc(size_t size)
 {
 #ifdef DEBUG
   printf("Allocate: %u bytes (0x%x) + header (%u bytes)\n", size, size, sizeof(heap_node));
 #endif
   heap_node *current_node = (heap_node *)heap->heap_start;
-  // printf("malloc start: %p\n", current_node);
+
+  printf("malloc start: %p  [%p]\n", current_node, (uint64_t)(current_node) & ~0xFFF);
+  uint64_t check_pages = (size + 4096) / 4096;
+  printf("Need check: %u pages\n", check_pages);
+
+  for (uint64_t i = 0; i < check_pages; i++)
+  {
+    uint64_t check_addr = (uint64_t)(current_node) + i * 0x1000;
+
+    if (is_virtual_memory_mapped(check_addr & ~0xFFF) == PT_IS_MAPPED)
+    {
+      printf("%i: %p [%p] is mapped\n", i, check_addr, check_addr & ~0xFFF);
+    }
+    else
+    {
+      printf("%i: %p [%p] is not mapped\n", i, check_addr, check_addr & ~0xFFF);
+    }
+  }
 
   while (current_node < heap->heap_head)
   {
@@ -119,6 +149,10 @@ void *kmalloc(size_t size)
       }
 
       map_if_not_mapped(return_address);
+      printf("U");
+
+      // map range?
+      range_map(current_node, return_address);
 
       return return_address;
     }
@@ -128,6 +162,7 @@ void *kmalloc(size_t size)
     uint64_t next_address = (uint64_t)(current_node) + next_offset;
 
     map_if_not_mapped(next_address);
+    printf("I");
 
     current_node = next_address;
   }
@@ -140,6 +175,8 @@ void *kmalloc(size_t size)
   heap->heap_head = return_address;
 
   map_if_not_mapped(return_address);
+  printf("O");
+  range_map(current_node, return_address);
 
   return return_address;
 }
@@ -205,7 +242,7 @@ void init_kheap()
 {
   printf("Init KHEAP\n");
   // allocate some space for heap
-  heap = vmm_allocate((1024 * 100), VM_FLAG_EXEC | VM_FLAG_WRITE);
+  heap = vmm_allocate((1024 * 1024 * 4), VM_FLAG_EXEC | VM_FLAG_WRITE);
   heap->heap_head = heap + sizeof(heap_node);
   heap->heap_start = heap->heap_head;
 

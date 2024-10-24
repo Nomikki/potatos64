@@ -14,6 +14,8 @@ uint32_t framebuffer_buffer[800 * 600];
 
 extern struct multiboot_tag_framebuffer *tagfb;
 extern char _binary_font_psf_start;
+extern uint64_t p4_table;
+
 int font_bytesPerLine;
 
 void init_framebuffer()
@@ -33,6 +35,24 @@ void init_framebuffer()
   printfs("framebuffer_buffer: %p -> %p\n", (void *)framebuffer_buffer, get_physical_address((void *)framebuffer_buffer));
   printfs("framebuffer: %p -> %p\n", (void *)&fbb_pt_tables, get_physical_address((void *)&fbb_pt_tables));
   printfs("\n");
+
+  if (is_virtual_memory_mapped((void *)framebuffer_buffer) == PT_NOT_MAPPED)
+  {
+    printf("Virt Framebuffer is not mapped!\n");
+  }
+  else
+  {
+    printf("Virt Framebuffer is mapped.\n");
+  }
+
+  if (is_physical_memory_mapped(get_physical_address((void *)framebuffer_buffer), &p4_table) == PT_NOT_MAPPED)
+  {
+    printf("Physical mem: Framebuffer is not mapped!\n");
+  }
+  else
+  {
+    printf("Physical mem: Framebuffer is mapped.\n");
+  }
 }
 
 void clear_framebuffer(uint8_t r, uint8_t g, uint8_t b)

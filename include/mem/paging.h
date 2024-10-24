@@ -45,6 +45,9 @@ typedef struct __attribute__((packed))
 #define PT_PAGE_MASK ~0xFFF
 #define PT_ADDRESS_MASK 0x1FF
 
+#define PT_NOT_MAPPED 0
+#define PT_IS_MAPPED 1
+
 #define SIGN_EXTENSION 0xFFFF000000000000
 #define ENTRIES_TO_ADDRESS(pml4, pdpr, pd, pt) ((pml4 << 39) | (pdpr << 30) | (pd << 21) | (pt << 12))
 
@@ -55,9 +58,10 @@ typedef struct __attribute__((packed))
 
 extern void setup_paging();
 extern void map_page(uint64_t virtual_address, uint64_t physical_address, uint64_t *pml4_table, uint8_t flags);
-extern uint64_t is_physical_memory_mapped(uint64_t physical_address, uint64_t *pml4_table);
 extern int is_virtual_memory_mapped(uint64_t virtual_address);
-extern void map_if_not_mapped(uint64_t address);
+extern int is_physical_memory_mapped(uint64_t physical_address, uint64_t *pml4_table);
+
+extern int map_if_not_mapped(uint64_t address);
 
 extern uint64_t align_to_page(uint64_t address);
 extern void *get_physical_address(uint64_t virtual_address);
