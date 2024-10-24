@@ -13,8 +13,8 @@ typedef enum
 
 typedef struct process_t
 {
-  char name[32];
   status_t process_status;
+  char name[32];
   cpu_status *context;
   // struct process_t *next;
 } process_t;

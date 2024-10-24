@@ -9,26 +9,15 @@
 #include <mem/kheap.h>
 
 #define PROCESS_MAX 32
-process_t snapshots[PROCESS_MAX];
+process_t **snapshots = NULL;
 
-process_t *current_process = NULL;
 int currentTask = 0;
 
 void idle_process(void *argv)
 {
   while (true)
   {
-    printf("!");
-    // asm("hlt");
-  }
-}
-
-void idle_process2(void *argv)
-{
-  while (true)
-  {
-    printf("!");
-    // asm("hlt");
+    asm("hlt");
   }
 }
 
@@ -85,9 +74,10 @@ uint64_t alloc_stack()
   return (uint64_t)kmalloc(1024 * 16);
 }
 
-void create_process(process_t *new_process, char *name, void (*_entry_point)(void *), void *arg)
+process_t *create_process(char *name, void (*_entry_point)(void *), void *arg)
 {
   asm("cli");
+  process_t *new_process = kmalloc(sizeof(process_t));
 
   new_process->context = kmalloc(sizeof(cpu_status));
   cpu_status *cpu = new_process->context;
@@ -120,8 +110,8 @@ void create_process(process_t *new_process, char *name, void (*_entry_point)(voi
   numTasks++;
   printf("Process created.\n\n");
 
-  // asm("sti");
-  return;
+  asm("sti");
+  return new_process;
 }
 
 void print_cpu_status(cpu_status *cur_status)
@@ -138,8 +128,8 @@ void print_cpu_status(cpu_status *cur_status)
 void print_task(int i)
 {
 
-  printf("proc [%i / %i]: %i: %s\n", i, numTasks, snapshots[i].process_status, snapshots[i].name);
-  print_cpu_status(snapshots[i].context);
+  printf("proc [%i / %i]: %i: %s\n", i, numTasks, snapshots[i]->process_status, snapshots[i]->name);
+  print_cpu_status(snapshots[i]->context);
 }
 
 void print_tasks()
@@ -163,25 +153,21 @@ void init_scheluder()
   kheap_print_travel();
 #endif
 
+  snapshots = (process_t **)kmalloc(sizeof(process_t *) * PROCESS_MAX);
+
   for (int i = 0; i < PROCESS_MAX; i++)
   {
-    snapshots[i].context = NULL;
-    strcpy(snapshots[i].name, "");
-    snapshots[i].process_status = DEAD;
+    snapshots[i]->context = NULL;
+    strcpy(snapshots[i]->name, ":(");
+    snapshots[i]->process_status = DEAD;
   }
   numTasks = 0;
-  create_process(&snapshots[numTasks], "idle", &idle_process, NULL);
-  create_process(&snapshots[numTasks], "processA", &processA, NULL);
-  create_process(&snapshots[numTasks], "processB", &processB, NULL);
-  create_process(&snapshots[numTasks], "processC", &processC, NULL);
-  create_process(&snapshots[numTasks], "processA", &processA, NULL);
-  create_process(&snapshots[numTasks], "processB", &processB, NULL);
-  create_process(&snapshots[numTasks], "processC", &processC, NULL);
+  snapshots[numTasks] = create_process("idle", &idle_process, NULL);
+  snapshots[numTasks] = create_process("processA", &processA, NULL);
+  snapshots[numTasks] = create_process("processB", &processB, NULL);
+  snapshots[numTasks] = create_process("processC", &processC, NULL);
 
-  // create_process(&snapshots[numTasks], "idle2", &idle_process2, NULL);
-  //  numTasks++;
   currentTask = 0;
-  current_process = &snapshots[currentTask];
 
 #ifdef DEBUG
   kheap_print_travel();
@@ -194,21 +180,17 @@ void init_scheluder()
 
 cpu_status *schelude(cpu_status *cur_status)
 {
-  if (current_process == NULL)
-  {
-    currentTask = 0;
-    current_process = &snapshots[currentTask];
-  }
 
-  current_process->context = cur_status;
-  current_process->process_status = READY;
+  snapshots[currentTask]->context = cur_status;
+  snapshots[currentTask]->process_status = READY;
 
   currentTask++;
   currentTask %= (numTasks);
 
-  current_process = &snapshots[currentTask];
-  current_process->process_status = RUNNING;
+  snapshots[currentTask]->process_status = RUNNING;
+
+  print_task(currentTask);
 
   asm("sti");
-  return current_process->context;
+  return snapshots[currentTask]->context;
 }
